@@ -21,67 +21,107 @@ app.use(express.json());
 
 app.post("/test", (req: Request, res: Response) => {
   try {
-  const order = req.body as Order;
-  const table = tables.find((table) => table.id === order.origin);
+    try {
+      const order = req.body as Order;
+      const table = tables.find((table) => table.id === order.origin);
 
-  if (order.items.length === 0)
-    return res
-      .status(400)
-      .send({ message: "ERROR: Cannot accept an empty order." });
+      if (order.items.length === 0)
+        return res
+          .status(400)
+          .send({ message: "ERROR: Cannot accept an empty order." });
 
-  if (!tableIds.includes(order.origin))
-    return res.status(400).send({
-      message: `ERROR: Table ID ${order.origin} does not exist.\nDid you check if the TableID correct?`,
-    });
+      if (!tableIds.includes(order.origin))
+        return res.status(400).send({
+          message: `ERROR: Table ID ${order.origin} does not exist.\nDid you check if the TableID correct?`,
+        });
 
-  if (!table)
-    return res.status(500).send({
-      message: `ERROR: Unable to assign order sent from table #${order.origin} to a table. Table is not found.`,
-    });
+      if (!table)
+        return res.status(500).send({
+          message: `ERROR: Unable to assign order sent from table #${order.origin} to a table. Table is not found.`,
+        });
 
-  order.id = activeOrders.length + 1;
-  order.time = Date.now();
-  order.status = "ORDER_SENT";
+      order.id = activeOrders.length + 1;
+      order.time = Date.now();
+      order.status = "ORDER_SENT";
 
-  activeOrders.push(order);
-  table.activeOrders = [...table.activeOrders, order.id];
+      /*order.items = order.items.map((orderItem) => ({...orderItem, status:"IN_PROGRESS"}))*/
 
-  return res.status(200).send(order);
+      activeOrders.push(order);
+      table.activeOrders = [...table.activeOrders, order.id];
+
+      console.log("new order", order);
+
+      return res.status(200).send(order);
+    } catch (err) {
+      return res.status(500).send({
+        message: `ERROR: ${err}`,
+      });
+    }
   } catch (err) {
-    return res.status(500).send({
-      message: `ERROR: ${err}`,
-    });
+    return res.status(500).send({ message: "Internal Error" });
   }
 });
 
 app.get("/update-status/:orderID/:status", (req: Request, res: Response) => {
-  const orderID = parseFloat(req.params.orderID);
-  const newStatus = req.params.status as keyof typeof OrderStatuses;
-  /*const origin = req.params.origin;*/
+  try {
+    const orderID = parseFloat(req.params.orderID);
+    const newStatus = req.params.status as keyof typeof OrderStatuses;
+    /*const origin = req.params.origin;*/
 
-  if(!Number.isInteger(orderID))
-  return res.status(400).send({
-    message: `ERROR: Invalid request parameters.`,
-  });
+    if (isNaN(orderID))
+      return res.status(400).send({
+        message: `ERROR: OrderID Is not a number.`,
+      });
 
-  const order = activeOrders.find((order) => order.id === orderID);
+    const order = activeOrders.find((order) => order.id === orderID);
 
-  
-  if(!order)
-  return res.status(500).send({
-    message: `ERROR: Order with ID ${orderID} could not be found.`,
-  });
+    if (!order)
+      return res.status(500).send({
+        message: `ERROR: Order with ID ${orderID} could not be found.`,
+      });
 
-  if(!OrderStatuses.hasOwnProperty(newStatus))
-  return res.status(400).send({
-    message: `ERROR: Invalid order status "${newStatus}"`,
-  });
-  
-  order.status = newStatus;
+    if (!OrderStatuses.hasOwnProperty(newStatus))
+      return res.status(400).send({
+        message: `ERROR: Invalid order status "${newStatus}"`,
+      });
 
+    order.status = newStatus;
 
+    return res.status(200).send(activeOrders);
+  } catch (err) {
+    return res.status(500).send({ message: "Internal Error" });
+  }
+});
 
-  return res.status(200).send(activeOrders);
+app.get("/get-table/:tableID", (req: Request, res: Response) => {
+  try {
+    const tableID = parseFloat(req.params.tableID);
+    const table = { ...tables[tableID] };
+
+    if (isNaN(tableID))
+      return res.status(400).send({
+        message: `ERROR: TableID is not a number.`,
+      });
+
+    if (!table)
+      return res.status(500).send({
+        message: `ERROR: Table with ID ${tableID} could not be found.`,
+      });
+
+    const updatedTable = {
+      ...table,
+      activeOrders: table.activeOrders.map((orderId) => {
+        const matchingOrder = activeOrders.find(
+          (fullOrder) => fullOrder.id === orderId
+        );
+        return matchingOrder || orderId;
+      }),
+    };
+
+    return res.status(200).send(updatedTable);
+  } catch (err) {
+    return res.status(500).send({ message: "Internal Error" });
+  }
 });
 
 app.get("/get-tables", (req: Request, res: Response) => {
