@@ -13,7 +13,7 @@ export const orderHasValidOptionsIngredients = (order: Order): boolean => {
       dish.params.options.some(
         (trueOption) =>
           trueOption.option === clientOption.option &&
-          clientOption.enabled === true
+          trueOption.enabled === true
       )
     );
 
@@ -22,7 +22,7 @@ export const orderHasValidOptionsIngredients = (order: Order): boolean => {
         dish.params.ingredients.some(
           (trueIngredient) =>
             trueIngredient.name === clientIngredient.name &&
-            clientIngredient.removable === true
+            trueIngredient.removable === true
         )
     );
 
