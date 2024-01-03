@@ -1,13 +1,17 @@
 import { dishes } from ".";
-import { Order } from "./types/globalTypes";
+import { Order, OrderItemStatuses, OrderStatuses } from "./types/globalTypes";
 
-export const orderHasValidOptionsIngredients = (order: Order): boolean => {
-  return order.items.every((item) => {
+export const validateOrder = (order: Order): void => {
+  order.items.every((item) => {
     const dish = dishes.find((dish) => dish.id === item.dish.dishID);
 
-    if (!dish) {
-      return false;
-    }
+    if (!dish) throw new Error("Invalid dish ID.");
+
+    if (!OrderItemStatuses.hasOwnProperty(item.status))
+      throw new Error("Invalid orderItem status.");
+
+    if (!OrderStatuses.hasOwnProperty(order.status))
+      throw new Error("Invalid order status.");
 
     const isValidOption = item.dish.addedOptions.every((clientOption) =>
       dish.params.options.some(
@@ -26,6 +30,8 @@ export const orderHasValidOptionsIngredients = (order: Order): boolean => {
         )
     );
 
-    return isValidOption && isValidIngredient;
+    if (!isValidOption) throw new Error("Invalid dish options.");
+
+    if (!isValidIngredient) throw new Error("Invalid dish ingredient.");
   });
 };

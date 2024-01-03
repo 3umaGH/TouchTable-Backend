@@ -7,7 +7,7 @@ import {
 } from "./types/globalTypes";
 import { mockCategories, mockDishes, mockTables } from "./mockData";
 import { v4 as uuidv4 } from "uuid";
-import { orderHasValidOptionsIngredients } from "./util";
+import { validateOrder } from "./util";
 
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -49,8 +49,7 @@ app.post("/order", (req: Request, res: Response) => {
         message: `ERROR: Unable to assign order sent from table #${order.origin} to a table. Table is not found.`,
       });
 
-    if (!orderHasValidOptionsIngredients(order))
-      throw new Error("Order validation failed.");
+    validateOrder(order);
 
     order.id = activeOrders.length + 1;
     order.time = Date.now();
@@ -82,8 +81,7 @@ app.put("/order", (req, res) => {
       });
     }
 
-    if (!orderHasValidOptionsIngredients(newOrder))
-      throw new Error("Order validation failed.");
+    validateOrder(newOrder);
 
     const prevOrder = activeOrders[prevOrderIndex];
 
@@ -105,7 +103,7 @@ app.put("/order", (req, res) => {
     return res.status(204).send();
   } catch (err) {
     console.error(err);
-    return res.status(500).send({ message: "Internal Error" });
+    return res.status(500).send({ message: "Internal Error: " +err });
   }
 });
 
