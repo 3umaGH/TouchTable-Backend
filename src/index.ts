@@ -19,6 +19,8 @@ const port = process.env.PORT || 3000;
 const tables: Table[] = mockTables;
 const tableIds = tables.map((table) => table.id);
 
+const dishes = mockDishes;
+
 let activeOrders: Order[] = [];
 /*const activeOrderIds = activeOrders.map((order) => order.id);
 const inactiveOrders: Order[] = [];*/
@@ -54,21 +56,54 @@ app.post("/order", (req: Request, res: Response) => {
       id: uuidv4(),
     }));
 
+    order.items.forEach((item) => {
+      const dish = dishes.find((dish) => dish.id === item.dish.dishID);
+
+      if (!dish) {
+        throw new Error(`Invalid Dish ID ${item.dish.dishID}. Dish not found.`);
+      }
+
+      const isValidOption = item.dish.addedOptions.every((clientOption) =>
+        dish.params.options.some(
+          (trueOption) =>
+            trueOption.option === clientOption.option &&
+            clientOption.enabled === true
+        )
+      );
+
+      const isValidIngredient = item.dish.removedIngredients.every(
+        (clientIngredient) =>
+          dish.params.ingredients.some(
+            (trueIngredient) =>
+              trueIngredient.name === clientIngredient.name &&
+              clientIngredient.removable === true
+          )
+      );
+
+      if (!isValidOption) {
+        throw new Error(`Invalid options for Dish ID ${item.dish.dishID}.`);
+      }
+
+      if (!isValidIngredient) {
+        throw new Error(`Invalid ingredients for Dish ID ${item.dish.dishID}.`);
+      }
+    });
+
     table.activeOrders = [...table.activeOrders, order.id];
     activeOrders.push(order);
 
-    console.log("new order", order);
-
     return res.status(200).send(order);
   } catch (err) {
-    return res.status(500).send({ message: "Internal Error" });
+    return res.status(500).send({ message: "Internal Error: " + err });
   }
 });
 
 app.put("/order", (req, res) => {
   try {
     const newOrder = req.body as Order;
-    const prevOrderIndex = activeOrders.findIndex((order) => order.id === newOrder.id);
+    const prevOrderIndex = activeOrders.findIndex(
+      (order) => order.id === newOrder.id
+    );
 
     if (prevOrderIndex === -1) {
       return res.status(400).send({
@@ -138,11 +173,11 @@ app.get("/get-dish-data", (req: Request, res: Response) => {
 });
 
 app.get("/tables", (req: Request, res: Response) => {
-  return res.status(200).send({tables: tables});
+  return res.status(200).send({ tables: tables });
 });
 
 app.get("/orders", (req: Request, res: Response) => {
-  return res.status(200).send({activeOrders: activeOrders});
+  return res.status(200).send({ activeOrders: activeOrders });
 });
 
 app.listen(port, () => {
