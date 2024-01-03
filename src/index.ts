@@ -7,6 +7,7 @@ import {
 } from "./types/globalTypes";
 import { mockCategories, mockDishes, mockTables } from "./mockData";
 import { v4 as uuidv4 } from "uuid";
+import { orderHasValidOptionsIngredients } from "./util";
 
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -19,7 +20,7 @@ const port = process.env.PORT || 3000;
 const tables: Table[] = mockTables;
 const tableIds = tables.map((table) => table.id);
 
-const dishes = mockDishes;
+export const dishes = mockDishes;
 
 let activeOrders: Order[] = [];
 /*const activeOrderIds = activeOrders.map((order) => order.id);
@@ -48,6 +49,9 @@ app.post("/order", (req: Request, res: Response) => {
         message: `ERROR: Unable to assign order sent from table #${order.origin} to a table. Table is not found.`,
       });
 
+    if (!orderHasValidOptionsIngredients(order))
+      throw new Error("Order validation failed.");
+
     order.id = activeOrders.length + 1;
     order.time = Date.now();
     order.status = "ORDER_RECEIVED";
@@ -55,39 +59,6 @@ app.post("/order", (req: Request, res: Response) => {
       ...orderItem,
       id: uuidv4(),
     }));
-
-    order.items.forEach((item) => {
-      const dish = dishes.find((dish) => dish.id === item.dish.dishID);
-
-      if (!dish) {
-        throw new Error(`Invalid Dish ID ${item.dish.dishID}. Dish not found.`);
-      }
-
-      const isValidOption = item.dish.addedOptions.every((clientOption) =>
-        dish.params.options.some(
-          (trueOption) =>
-            trueOption.option === clientOption.option &&
-            clientOption.enabled === true
-        )
-      );
-
-      const isValidIngredient = item.dish.removedIngredients.every(
-        (clientIngredient) =>
-          dish.params.ingredients.some(
-            (trueIngredient) =>
-              trueIngredient.name === clientIngredient.name &&
-              clientIngredient.removable === true
-          )
-      );
-
-      if (!isValidOption) {
-        throw new Error(`Invalid options for Dish ID ${item.dish.dishID}.`);
-      }
-
-      if (!isValidIngredient) {
-        throw new Error(`Invalid ingredients for Dish ID ${item.dish.dishID}.`);
-      }
-    });
 
     table.activeOrders = [...table.activeOrders, order.id];
     activeOrders.push(order);
@@ -110,6 +81,9 @@ app.put("/order", (req, res) => {
         message: `ERROR: Order ${newOrder.id} does not exist.`,
       });
     }
+
+    if (!orderHasValidOptionsIngredients(newOrder))
+      throw new Error("Order validation failed.");
 
     const prevOrder = activeOrders[prevOrderIndex];
 
