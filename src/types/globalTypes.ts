@@ -19,6 +19,7 @@ export const OrderItemStatuses = {
   IN_PROGRESS: "IN_PROGRESS",
   PREPARED: "PREPARED",
   DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED"
 };
 
 export const OrderStatuses = {
