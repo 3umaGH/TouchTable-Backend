@@ -79,7 +79,12 @@ export type Category = {
   title: string;
 };
 
-export type NotificationType = "READY_FOR_DELIVERY" | "ORDER_ITEM_CANCELLED" | "NEED_ASSISTANCE" | "PREPARATION_STARTED";
+export type NotificationType =
+  | "READY_FOR_DELIVERY"
+  | "ORDER_ITEM_CANCELLED"
+  | "NEED_ASSISTANCE"
+  | "PREPARATION_STARTED"
+  | "NEW_ORDER";
 
 export type Notification = {
   id: string;
@@ -89,10 +94,18 @@ export type Notification = {
   type: NotificationType;
   active: boolean;
   message: string;
+
+  extraData: {
+    orderItemID?: string;
+    orderID?: number;
+  };
 };
 
 export type NotificationActor = number | "KITCHEN" | "WAITERS";
 
 export type OrderItemUpdateType = "IsPreparing" | "IsPrepared" | "IsCancelled";
 
-export type OrderItemUpdateEvent = { type: OrderItemUpdateType; item: OrderItem };
+export type OrderItemUpdateEvent = {
+  type: OrderItemUpdateType;
+  item: OrderItem;
+};

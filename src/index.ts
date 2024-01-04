@@ -28,13 +28,15 @@ export const dishes = mockDishes;
 
 let activeOrders: Order[] = [];
 
-const notifications = new Map<NotificationActor, Notification[]>();
+const notifications: Notification[] = [];
 
 const sendNotification = (
   recipient: NotificationActor,
   origin: NotificationActor,
   type: NotificationType,
-  message: string
+  message: string,
+
+  extraData?: { orderItemID?: string; orderID: number }
 ) => {
   const notification: Notification = {
     id: uuidv4(),
@@ -44,11 +46,17 @@ const sendNotification = (
     type: type,
     active: true,
     message: message,
+
+    extraData: {},
   };
 
-  if (notifications.has(recipient))
-    notifications.get(recipient)?.push(notification);
-  else notifications.set(recipient, [notification]);
+  if (extraData?.orderItemID !== undefined)
+    notification.extraData.orderItemID = extraData.orderItemID;
+
+  if (extraData?.orderID !== undefined)
+    notification.extraData.orderID = extraData.orderID;
+
+  notifications.push(notification);
 
   /*console.log("new notif:", notification);*/
 };
@@ -88,6 +96,13 @@ app.post("/order", (req: Request, res: Response) => {
 
     table.activeOrders = [...table.activeOrders, order.id];
     activeOrders.push(order);
+
+    sendNotification(
+      "WAITERS",
+      order.origin,
+      "NEW_ORDER",
+      `[REPORT] New order created: [ID: #${order.id}] with ${order.items.length} items.`
+    );
 
     return res.status(200).send(order);
   } catch (err) {
@@ -150,6 +165,7 @@ app.put("/order", (req, res) => {
 
     detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
       if (!update) return;
+      if (!newOrder.id) return;
 
       const dish = getDishByID(update.item.dish.dishID);
       switch (update?.type) {
@@ -158,7 +174,8 @@ app.put("/order", (req, res) => {
             "WAITERS",
             "KITCHEN",
             "READY_FOR_DELIVERY",
-            `${update.item.amount}x ${dish?.params.title} is ready to be delivered to Table #${newOrder.origin}`
+            `[ORDER: #${newOrder.id}] ${update.item.amount}x ${dish?.params.title} is prepared and ready for delivery to Table #${newOrder.origin}.`,
+            { orderID: newOrder.id, orderItemID: update.item.id }
           );
           break;
         }
@@ -168,7 +185,8 @@ app.put("/order", (req, res) => {
             "WAITERS",
             "KITCHEN",
             "ORDER_ITEM_CANCELLED",
-            `${update.item.amount}x ${dish?.params.title} is cancelled by kitchen, please notify Table #${newOrder.origin}`
+            `[ORDER: #${newOrder.id}] ${update.item.amount}x ${dish?.params.title} has been cancelled by the kitchen. Please notify Table #${newOrder.origin}.`,
+            { orderID: newOrder.id, orderItemID: update.item.id }
           );
           break;
         }
@@ -178,12 +196,14 @@ app.put("/order", (req, res) => {
             "WAITERS",
             "KITCHEN",
             "PREPARATION_STARTED",
-            `${update.item.amount}x ${dish?.params.title} for Table #${newOrder.origin} is now preparing.`
+            `[ORDER: #${newOrder.id}] ${update.item.amount}x ${dish?.params.title} for Table #${newOrder.origin} is now in preparation.`,
+            { orderID: newOrder.id, orderItemID: update.item.id }
           );
           break;
         }
-        default: 
-        break;
+
+        default:
+          break;
       }
     });
 
@@ -241,8 +261,28 @@ app.get("/orders", (req: Request, res: Response) => {
 
 app.get("/notifications", (req: Request, res: Response) => {
   console.log(notifications);
-  return res.status(200).send(Array.from(notifications.values()));
+  return res
+    .status(200)
+    .send(notifications.filter((notification) => notification.active));
 });
+
+app.get(
+  "/notification/deactivate/:notificationID",
+  (req: Request, res: Response) => {
+    try {
+      const notificationID = req.params.notificationID;
+      const notification = notifications.find(
+        (notif) => notif.id === notificationID
+      );
+
+      if (notification) notification.active = false;
+
+      return res.status(200).send(true);
+    } catch (err) {
+      return res.status(500).send(false);
+    }
+  }
+);
 
 /* TODO: Flood protection */
 app.post("/assistance", (req: Request, res: Response) => {
@@ -255,7 +295,7 @@ app.post("/assistance", (req: Request, res: Response) => {
       "WAITERS",
       data.origin,
       "NEED_ASSISTANCE",
-      `Table #${data.origin} is requesting assistance.`
+      `Assistance requested for Table #${data.origin}.`
     );
 
     return res.status(200).send(true);
