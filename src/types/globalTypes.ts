@@ -41,17 +41,9 @@ export type CustomizedDish = {
 };
 
 export type Table = {
-  id: TableID;
-  status: TableStatus;
+  id: number;
   activeOrders: number[];
 };
-
-export type TableStatus =
-  | "EMPTY"
-  | "WAITING_ORDER"
-  | "WAITING_DELIVERY"
-  | "WAITING_CHECK"
-  | "WAITING_ASSISTANCE";
 
 export type Ingredient = {
   name: string;
@@ -92,14 +84,12 @@ export type NotificationType = "READY_FOR_DELIVERY" | "ORDER_ITEM_CANCELLED" | "
 export type Notification = {
   id: string;
   time: number;
-  origin: "KITCHEN" | "WAITERS" | TableID;
-  recipient: "KITCHEN" | "WAITERS" | TableID;
+  origin: NotificationActor;
+  recipient: NotificationActor;
   type: NotificationType;
   active: boolean;
   message: string;
 };
-
-export type TableID = number;
 
 export type NotificationActor = number | "KITCHEN" | "WAITERS";
 
