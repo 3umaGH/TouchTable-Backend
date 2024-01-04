@@ -8,7 +8,6 @@ import {
   OrderStatus,
   OrderStatuses,
   Table,
-  TableID,
 } from "./types/globalTypes";
 import { mockCategories, mockDishes, mockTables } from "./mockData";
 import { v4 as uuidv4 } from "uuid";
@@ -28,6 +27,7 @@ const tableIds = tables.map((table) => table.id);
 export const dishes = mockDishes;
 
 let activeOrders: Order[] = [];
+
 const notifications = new Map<NotificationActor, Notification[]>();
 
 const sendNotification = (
@@ -160,6 +160,7 @@ app.put("/order", (req, res) => {
             "READY_FOR_DELIVERY",
             `${update.item.amount}x ${dish?.params.title} is ready to be delivered to Table #${newOrder.origin}`
           );
+          break;
         }
 
         case "IsCancelled": {
@@ -169,6 +170,7 @@ app.put("/order", (req, res) => {
             "ORDER_ITEM_CANCELLED",
             `${update.item.amount}x ${dish?.params.title} is cancelled by kitchen, please notify Table #${newOrder.origin}`
           );
+          break;
         }
 
         case "IsPreparing": {
@@ -178,7 +180,10 @@ app.put("/order", (req, res) => {
             "PREPARATION_STARTED",
             `${update.item.amount}x ${dish?.params.title} for Table #${newOrder.origin} is now preparing.`
           );
+          break;
         }
+        default: 
+        break;
       }
     });
 
@@ -236,9 +241,10 @@ app.get("/orders", (req: Request, res: Response) => {
 
 app.get("/notifications", (req: Request, res: Response) => {
   console.log(notifications);
-  return res.status(200).send(Array.from(notifications.entries()));
+  return res.status(200).send(Array.from(notifications.values()));
 });
 
+/* TODO: Flood protection */
 app.post("/assistance", (req: Request, res: Response) => {
   try {
     const data = req.body as { origin: number };
