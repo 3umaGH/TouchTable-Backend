@@ -1,13 +1,18 @@
 import express, { Express, Request, Response } from "express";
 import {
+  Notification,
+  NotificationActor,
+  NotificationType,
   Order,
   OrderItemStatuses,
+  OrderStatus,
   OrderStatuses,
   Table,
+  TableID,
 } from "./types/globalTypes";
 import { mockCategories, mockDishes, mockTables } from "./mockData";
 import { v4 as uuidv4 } from "uuid";
-import { validateOrder } from "./util";
+import { detectOrderItemUpdate, getDishByID, validateOrder } from "./util";
 
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -23,8 +28,30 @@ const tableIds = tables.map((table) => table.id);
 export const dishes = mockDishes;
 
 let activeOrders: Order[] = [];
-/*const activeOrderIds = activeOrders.map((order) => order.id);
-const inactiveOrders: Order[] = [];*/
+const notifications = new Map<NotificationActor, Notification[]>();
+
+const sendNotification = (
+  recipient: NotificationActor,
+  origin: NotificationActor,
+  type: NotificationType,
+  message: string
+) => {
+  const notification: Notification = {
+    id: uuidv4(),
+    time: Date.now(),
+    origin: origin,
+    recipient: recipient,
+    type: type,
+    active: true,
+    message: message,
+  };
+
+  if (notifications.has(recipient))
+    notifications.get(recipient)?.push(notification);
+  else notifications.set(recipient, [notification]);
+
+  /*console.log("new notif:", notification);*/
+};
 
 app.use(cors());
 app.use(express.json());
@@ -81,15 +108,38 @@ app.put("/order", (req, res) => {
       });
     }
 
+    const prevOrder = activeOrders[prevOrderIndex];
+
     validateOrder(newOrder);
 
-    const prevOrder = activeOrders[prevOrderIndex];
+    const itemStatuses = newOrder.items.map((item) => item.status);
+
+    let newStatus: OrderStatus;
+
+    /*TODO: Fix this crap*/
+    if (itemStatuses.every((status) => status === "CANCELLED")) {
+      newStatus = "CANCELLED";
+    } else if (
+      itemStatuses.includes("DELIVERED") ||
+      (itemStatuses.includes("DELIVERED") && itemStatuses.includes("CANCELLED"))
+    ) {
+      newStatus = "DELIVERED";
+    } else if (
+      itemStatuses.includes("IN_PROGRESS") ||
+      (itemStatuses.includes("IN_PROGRESS") &&
+        itemStatuses.includes("CANCELLED"))
+    ) {
+      newStatus = "IN_PROGRESS";
+    } else {
+      newStatus = "IN_PROGRESS";
+    }
 
     const updatedOrder = {
       ...newOrder,
       id: prevOrder.id,
       time: prevOrder.time,
       origin: prevOrder.origin,
+      status: newStatus,
     };
 
     activeOrders = [
@@ -98,12 +148,44 @@ app.put("/order", (req, res) => {
       ...activeOrders.slice(prevOrderIndex + 1),
     ];
 
-    console.log(updatedOrder);
+    detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
+      if (!update) return;
+
+      const dish = getDishByID(update.item.dish.dishID);
+      switch (update?.type) {
+        case "IsPrepared": {
+          sendNotification(
+            "WAITERS",
+            "KITCHEN",
+            "READY_FOR_DELIVERY",
+            `${update.item.amount}x ${dish?.params.title} is ready to be delivered to Table #${newOrder.origin}`
+          );
+        }
+
+        case "IsCancelled": {
+          sendNotification(
+            "WAITERS",
+            "KITCHEN",
+            "ORDER_ITEM_CANCELLED",
+            `${update.item.amount}x ${dish?.params.title} is cancelled by kitchen, please notify Table #${newOrder.origin}`
+          );
+        }
+
+        case "IsPreparing": {
+          sendNotification(
+            "WAITERS",
+            "KITCHEN",
+            "PREPARATION_STARTED",
+            `${update.item.amount}x ${dish?.params.title} for Table #${newOrder.origin} is now preparing.`
+          );
+        }
+      }
+    });
 
     return res.status(204).send();
   } catch (err) {
     console.error(err);
-    return res.status(500).send({ message: "Internal Error: " +err });
+    return res.status(500).send({ message: "Internal Error: " + err });
   }
 });
 
@@ -150,6 +232,31 @@ app.get("/tables", (req: Request, res: Response) => {
 
 app.get("/orders", (req: Request, res: Response) => {
   return res.status(200).send({ activeOrders: activeOrders });
+});
+
+app.get("/notifications", (req: Request, res: Response) => {
+  console.log(notifications);
+  return res.status(200).send(Array.from(notifications.entries()));
+});
+
+app.post("/assistance", (req: Request, res: Response) => {
+  try {
+    const data = req.body as { origin: number };
+
+    if (!tableIds.includes(data.origin)) throw new Error("Invalid origin");
+
+    sendNotification(
+      "WAITERS",
+      data.origin,
+      "NEED_ASSISTANCE",
+      `Table #${data.origin} is requesting assistance.`
+    );
+
+    return res.status(200).send(true);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: "Internal Error: " + err });
+  }
 });
 
 app.listen(port, () => {

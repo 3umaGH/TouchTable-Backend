@@ -19,7 +19,7 @@ export const OrderItemStatuses = {
   IN_PROGRESS: "IN_PROGRESS",
   PREPARED: "PREPARED",
   DELIVERED: "DELIVERED",
-  CANCELLED: "CANCELLED"
+  CANCELLED: "CANCELLED",
 };
 
 export const OrderStatuses = {
@@ -27,6 +27,7 @@ export const OrderStatuses = {
   ORDER_RECEIVED: "ORDER_RECEIVED",
   IN_PROGRESS: "IN_PROGRESS",
   DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
 };
 
 export type OrderStatus = keyof typeof OrderStatuses;
@@ -40,7 +41,7 @@ export type CustomizedDish = {
 };
 
 export type Table = {
-  id: number;
+  id: TableID;
   status: TableStatus;
   activeOrders: number[];
 };
@@ -85,3 +86,23 @@ export type Category = {
   id: number;
   title: string;
 };
+
+export type NotificationType = "READY_FOR_DELIVERY" | "ORDER_ITEM_CANCELLED" | "NEED_ASSISTANCE" | "PREPARATION_STARTED";
+
+export type Notification = {
+  id: string;
+  time: number;
+  origin: "KITCHEN" | "WAITERS" | TableID;
+  recipient: "KITCHEN" | "WAITERS" | TableID;
+  type: NotificationType;
+  active: boolean;
+  message: string;
+};
+
+export type TableID = number;
+
+export type NotificationActor = number | "KITCHEN" | "WAITERS";
+
+export type OrderItemUpdateType = "IsPreparing" | "IsPrepared" | "IsCancelled";
+
+export type OrderItemUpdateEvent = { type: OrderItemUpdateType; item: OrderItem };

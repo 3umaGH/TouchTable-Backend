@@ -1,5 +1,12 @@
 import { dishes } from ".";
-import { Order, OrderItemStatuses, OrderStatuses } from "./types/globalTypes";
+import {
+  Order,
+  OrderItem,
+  OrderItemStatuses,
+  OrderItemUpdateEvent,
+  OrderItemUpdateType,
+  OrderStatuses,
+} from "./types/globalTypes";
 
 export const validateOrder = (order: Order): void => {
   order.items.every((item) => {
@@ -34,4 +41,51 @@ export const validateOrder = (order: Order): void => {
 
     if (!isValidIngredient) throw new Error("Invalid dish ingredient.");
   });
+};
+
+export const detectOrderItemUpdate = (newOrder: Order, prevOrder: Order) => {
+  const updates: OrderItemUpdateEvent[] = [];
+
+  newOrder.items.forEach((newItem) => {
+    const prevItem = prevOrder.items.find((item) => item.id === newItem.id);
+
+    if (!prevItem) {
+      return;
+    }
+
+    let type: OrderItemUpdateType | null = null;
+
+    switch (true) {
+      case prevItem.status === OrderItemStatuses.INIT &&
+        newItem.status === OrderItemStatuses.IN_PROGRESS:
+        type = "IsPreparing";
+        break;
+
+      case prevItem.status === OrderItemStatuses.IN_PROGRESS &&
+        newItem.status === OrderItemStatuses.PREPARED:
+        type = "IsPrepared";
+        break;
+
+      case prevItem.status === OrderItemStatuses.IN_PROGRESS &&
+        newItem.status === OrderItemStatuses.CANCELLED:
+        type = "IsCancelled";
+        break;
+
+      case prevItem.status === OrderItemStatuses.INIT &&
+        newItem.status === OrderItemStatuses.CANCELLED:
+        type = "IsCancelled";
+        break;
+
+      default:
+        break;
+    }
+
+    if (type) updates.push({ type: type, item: newItem });
+  });
+
+  return updates;
+};
+
+export const getDishByID = (id: number) => {
+  return dishes.find((dish) => dish.id === id);
 };
