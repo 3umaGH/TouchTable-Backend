@@ -1,7 +1,6 @@
 import express, { Express, Request, Response } from "express";
 import {
   Notification,
-  NotificationActor,
   NotificationType,
   Order,
   OrderItemStatuses,
@@ -31,21 +30,16 @@ let activeOrders: Order[] = [];
 const notifications: Notification[] = [];
 
 const sendNotification = (
-  recipient: NotificationActor,
-  origin: NotificationActor,
+  origin: number,
   type: NotificationType,
-  message: string,
-
-  extraData?: { orderItemID?: string; orderID: number }
+  extraData?: { orderItemID?: string; orderID: number[] }
 ) => {
   const notification: Notification = {
     id: uuidv4(),
     time: Date.now(),
     origin: origin,
-    recipient: recipient,
     type: type,
     active: true,
-    message: message,
 
     extraData: {},
   };
@@ -97,12 +91,7 @@ app.post("/order", (req: Request, res: Response) => {
     table.activeOrders = [...table.activeOrders, order.id];
     activeOrders.push(order);
 
-    sendNotification(
-      "WAITERS",
-      order.origin,
-      "NEW_ORDER",
-      `[REPORT] New order created: [ID: #${order.id}] with ${order.items.length} items.`
-    );
+    sendNotification(order.origin, "NEW_ORDER", { orderID: [order.id] });
 
     return res.status(200).send(order);
   } catch (err) {
@@ -170,35 +159,29 @@ app.put("/order", (req, res) => {
       const dish = getDishByID(update.item.dish.dishID);
       switch (update?.type) {
         case "IsPrepared": {
-          sendNotification(
-            "WAITERS",
-            "KITCHEN",
-            "READY_FOR_DELIVERY",
-            `[ORDER: #${newOrder.id}] ${update.item.amount}x ${dish?.params.title} is prepared and ready for delivery to Table #${newOrder.origin}.`,
-            { orderID: newOrder.id, orderItemID: update.item.id }
-          );
+          sendNotification(newOrder.origin, "READY_FOR_DELIVERY", {
+            orderID: [newOrder.id],
+            orderItemID: update.item.id,
+          });
           break;
         }
 
         case "IsCancelled": {
-          sendNotification(
-            "WAITERS",
-            "KITCHEN",
-            "ORDER_ITEM_CANCELLED",
-            `[ORDER: #${newOrder.id}] ${update.item.amount}x ${dish?.params.title} has been cancelled by the kitchen. Please notify Table #${newOrder.origin}.`,
-            { orderID: newOrder.id, orderItemID: update.item.id }
-          );
+          sendNotification(newOrder.origin, "ORDER_ITEM_CANCELLED", {
+            orderID: [newOrder.id],
+            orderItemID: update.item.id,
+          });
           break;
         }
 
         case "IsPreparing": {
-          sendNotification(
+          /* sendNotification(
             "WAITERS",
             "KITCHEN",
             "PREPARATION_STARTED",
             `[ORDER: #${newOrder.id}] ${update.item.amount}x ${dish?.params.title} for Table #${newOrder.origin} is now in preparation.`,
-            { orderID: newOrder.id, orderItemID: update.item.id }
-          );
+            { orderID: [newOrder.id], orderItemID: update.item.id }
+          );*/
           break;
         }
 
@@ -263,7 +246,7 @@ app.get("/notifications", (req: Request, res: Response) => {
   console.log(notifications);
   return res
     .status(200)
-    .send(notifications.filter((notification) => notification.active));
+    .send(notifications.map((notification) => notification));
 });
 
 app.get(
@@ -291,12 +274,7 @@ app.post("/assistance", (req: Request, res: Response) => {
 
     if (!tableIds.includes(data.origin)) throw new Error("Invalid origin");
 
-    sendNotification(
-      "WAITERS",
-      data.origin,
-      "NEED_ASSISTANCE",
-      `Assistance requested for Table #${data.origin}.`
-    );
+    sendNotification(data.origin, "NEED_ASSISTANCE");
 
     return res.status(200).send(true);
   } catch (err) {

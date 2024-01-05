@@ -89,19 +89,15 @@ export type NotificationType =
 export type Notification = {
   id: string;
   time: number;
-  origin: NotificationActor;
-  recipient: NotificationActor;
+  origin: number; // Origin table ID
   type: NotificationType;
   active: boolean;
-  message: string;
 
   extraData: {
     orderItemID?: string;
-    orderID?: number;
+    orderID?: number[];
   };
 };
-
-export type NotificationActor = number | "KITCHEN" | "WAITERS";
 
 export type OrderItemUpdateType = "IsPreparing" | "IsPrepared" | "IsCancelled";
 
