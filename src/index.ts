@@ -26,8 +26,9 @@ const tableIds = tables.map((table) => table.id);
 export const dishes = mockDishes;
 
 let activeOrders: Order[] = [];
+let inactiveOrders: Order[] = [];
 
-const notifications: Notification[] = [];
+let notifications: Notification[] = [];
 
 const sendNotification = (
   origin: number,
@@ -146,11 +147,37 @@ app.put("/order", (req, res) => {
       status: newStatus,
     };
 
-    activeOrders = [
-      ...activeOrders.slice(0, prevOrderIndex),
-      updatedOrder,
-      ...activeOrders.slice(prevOrderIndex + 1),
-    ];
+    if (newOrder.completed) {
+      // Clean up table active orders
+      const originTable = tables.find((table) => table.id === prevOrder.origin);
+
+      if (!originTable)
+        throw new Error("Unable to find origin table to delete active order");
+
+      originTable.activeOrders = originTable.activeOrders.filter(
+        (id) => id !== newOrder.id
+      );
+
+      /* Move from active orders to inactive orders array
+      activeOrders = activeOrders.filter((order) => order.id !== prevOrder.id);
+      inactiveOrders = [...inactiveOrders, newOrder];*/
+
+      // Set notifications inactive that are associated with that table.
+      notifications = notifications.map((notification) => {
+        if (notification.origin === prevOrder.origin) {
+          return { ...notification, active: false };
+        }
+        return notification;
+      });
+
+      console.log("COMPELTED ", newOrder.id);
+    } else {
+      activeOrders = [
+        ...activeOrders.slice(0, prevOrderIndex),
+        updatedOrder,
+        ...activeOrders.slice(prevOrderIndex + 1),
+      ];
+    }
 
     detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
       if (!update) return;
@@ -190,6 +217,7 @@ app.put("/order", (req, res) => {
       }
     });
 
+    console.log(activeOrders);
     return res.status(204).send();
   } catch (err) {
     console.error(err);
@@ -239,11 +267,12 @@ app.get("/tables", (req: Request, res: Response) => {
 });
 
 app.get("/orders", (req: Request, res: Response) => {
-  return res.status(200).send({ activeOrders: activeOrders });
+  return res
+    .status(200)
+    .send({ activeOrders: activeOrders.filter((order) => !order.completed) });
 });
 
 app.get("/notifications", (req: Request, res: Response) => {
-  console.log(notifications);
   return res
     .status(200)
     .send(notifications.map((notification) => notification));
@@ -275,6 +304,27 @@ app.post("/assistance", (req: Request, res: Response) => {
     if (!tableIds.includes(data.origin)) throw new Error("Invalid origin");
 
     sendNotification(data.origin, "NEED_ASSISTANCE");
+
+    return res.status(200).send(true);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: "Internal Error: " + err });
+  }
+});
+
+app.post("/check", (req: Request, res: Response) => {
+  try {
+    const data = req.body as { origin: number };
+
+    if (!tableIds.includes(data.origin)) throw new Error("Invalid origin");
+
+    sendNotification(data.origin, "CHECK_REQUESTED", {
+      orderID: activeOrders
+        .filter(
+          (order) => order.origin !== null && order.origin === data.origin
+        )
+        .map((order) => order.id as number),
+    });
 
     return res.status(200).send(true);
   } catch (err) {

@@ -5,6 +5,8 @@ export type Order = {
   status: OrderStatus;
 
   items: OrderItem[];
+
+  completed: boolean;
 };
 
 export type OrderItem = {
@@ -83,8 +85,8 @@ export type NotificationType =
   | "READY_FOR_DELIVERY"
   | "ORDER_ITEM_CANCELLED"
   | "NEED_ASSISTANCE"
-  | "PREPARATION_STARTED"
-  | "NEW_ORDER";
+  | "NEW_ORDER"
+  | "CHECK_REQUESTED";
 
 export type Notification = {
   id: string;
