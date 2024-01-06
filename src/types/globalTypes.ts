@@ -5,8 +5,6 @@ export type Order = {
   status: OrderStatus;
 
   items: OrderItem[];
-
-  completed: boolean;
 };
 
 export type OrderItem = {
@@ -30,6 +28,7 @@ export const OrderStatuses = {
   IN_PROGRESS: "IN_PROGRESS",
   DELIVERED: "DELIVERED",
   CANCELLED: "CANCELLED",
+  FINISHED: "FINISHED",
 };
 
 export type OrderStatus = keyof typeof OrderStatuses;

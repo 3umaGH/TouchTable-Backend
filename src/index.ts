@@ -125,20 +125,22 @@ app.put("/order", (req, res) => {
       return itemStatuses.some((item) => item == status);
     };
 
-    if (itemStatuses.every((status) => status == "CANCELLED")) {
-      newStatus = "CANCELLED";
-    }
+    if (newOrder.status !== "CANCELLED" && newOrder.status !== "FINISHED") {
+      if (itemStatuses.every((status) => status == "CANCELLED")) {
+        newStatus = "CANCELLED";
+      }
 
-    if (contains("IN_PROGRESS")) {
-      newStatus = "IN_PROGRESS";
-    }
+      if (contains("IN_PROGRESS")) {
+        newStatus = "IN_PROGRESS";
+      }
 
-    if (
-      contains("DELIVERED") &&
-      !contains("IN_PROGRESS") &&
-      !contains("ORDER_RECEIVED")
-    ) {
-      newStatus = "DELIVERED";
+      if (
+        contains("DELIVERED") &&
+        !contains("IN_PROGRESS") &&
+        !contains("ORDER_RECEIVED")
+      ) {
+        newStatus = "DELIVERED";
+      }
     }
 
     const updatedOrder = {
@@ -149,7 +151,7 @@ app.put("/order", (req, res) => {
       status: newStatus,
     };
 
-    if (newOrder.completed) {
+    if (newOrder.status === "FINISHED") {
       // Clean up table active orders
       const originTable = tables.find((table) => table.id === prevOrder.origin);
 
@@ -160,10 +162,6 @@ app.put("/order", (req, res) => {
         (id) => id !== newOrder.id
       );
 
-      /* Move from active orders to inactive orders array
-      activeOrders = activeOrders.filter((order) => order.id !== prevOrder.id);
-      inactiveOrders = [...inactiveOrders, newOrder];*/
-
       // Set notifications inactive that are associated with that table.
       notifications = notifications.map((notification) => {
         if (notification.origin === prevOrder.origin) {
@@ -172,14 +170,15 @@ app.put("/order", (req, res) => {
         return notification;
       });
 
-      console.log("COMPELTED ", newOrder.id);
-    } else {
-      activeOrders = [
-        ...activeOrders.slice(0, prevOrderIndex),
-        updatedOrder,
-        ...activeOrders.slice(prevOrderIndex + 1),
-      ];
     }
+
+    activeOrders = [
+      ...activeOrders.slice(0, prevOrderIndex),
+      updatedOrder,
+      ...activeOrders.slice(prevOrderIndex + 1),
+    ];
+
+    console.log(activeOrders);
 
     detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
       if (!update) return;
@@ -219,7 +218,6 @@ app.put("/order", (req, res) => {
       }
     });
 
-    console.log(activeOrders);
     return res.status(204).send();
   } catch (err) {
     console.error(err);
@@ -269,9 +267,14 @@ app.get("/tables", (req: Request, res: Response) => {
 });
 
 app.get("/orders", (req: Request, res: Response) => {
-  return res
-    .status(200)
-    .send({ activeOrders: activeOrders.filter((order) => !order.completed) });
+  console.log(
+    "active order",
+    activeOrders.filter((or) => or.status !== "FINISHED").length
+  );
+
+  return res.status(200).send({
+    activeOrders: activeOrders.filter((order) => order.status !== "FINISHED"),
+  });
 });
 
 app.get("/notifications", (req: Request, res: Response) => {
