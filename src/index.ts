@@ -11,6 +11,7 @@ import {
 import { mockCategories, mockDishes, mockTables } from "./mockData";
 import { v4 as uuidv4 } from "uuid";
 import { detectOrderItemUpdate, getDishByID, validateOrder } from "./util";
+import { CANCELLED } from "dns";
 
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -118,25 +119,26 @@ app.put("/order", (req, res) => {
     validateOrder(newOrder);
 
     const itemStatuses = newOrder.items.map((item) => item.status);
+    let newStatus: OrderStatus = prevOrder.status;
 
-    let newStatus: OrderStatus;
+    const contains = (status: OrderStatus) => {
+      return itemStatuses.some((item) => item == status);
+    };
 
-    /*TODO: Fix this crap*/
-    if (itemStatuses.every((status) => status === "CANCELLED")) {
+    if (itemStatuses.every((status) => status == "CANCELLED")) {
       newStatus = "CANCELLED";
-    } else if (
-      itemStatuses.includes("DELIVERED") ||
-      (itemStatuses.includes("DELIVERED") && itemStatuses.includes("CANCELLED"))
+    }
+
+    if (contains("IN_PROGRESS")) {
+      newStatus = "IN_PROGRESS";
+    }
+
+    if (
+      contains("DELIVERED") &&
+      !contains("IN_PROGRESS") &&
+      !contains("ORDER_RECEIVED")
     ) {
       newStatus = "DELIVERED";
-    } else if (
-      itemStatuses.includes("IN_PROGRESS") ||
-      (itemStatuses.includes("IN_PROGRESS") &&
-        itemStatuses.includes("CANCELLED"))
-    ) {
-      newStatus = "IN_PROGRESS";
-    } else {
-      newStatus = "IN_PROGRESS";
     }
 
     const updatedOrder = {
