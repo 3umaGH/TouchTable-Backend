@@ -239,7 +239,7 @@ export const mockDishes: Dish[] = [
     price: 14.99,
     discount: 0,
     params: {
-      title: "Beef Poke Bowl with Eggs, Carrots, Wakame, and Rice",
+      title: "Beef Poke Bowl with an egg and",
       description:
         "Enjoy a flavorful poke bowl featuring tender beef, eggs, carrots, wakame seaweed, and rice. This delicious bowl is a perfect blend of protein, vegetables, and grains, providing a satisfying and nutritious meal.",
       quantity: "1 bowl",

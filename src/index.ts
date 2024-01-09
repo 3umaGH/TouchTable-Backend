@@ -80,6 +80,20 @@ app.post("/order", (req: Request, res: Response) => {
         message: `ERROR: Unable to assign order sent from table #${order.origin} to a table. Table is not found.`,
       });
 
+    /* Prevent user from adding new items, while he is waiting for the check*/
+    const existingRequest = notifications.find(
+      (notification) =>
+        notification.origin === order.origin &&
+        notification.type === "CHECK_REQUESTED" &&
+        notification.active
+    );
+
+    if (existingRequest) {
+      return res.status(406).send({
+        message: `ERROR: Unable to add a new order, payment is in progress.`,
+      });
+    }
+
     validateOrder(order);
 
     order.id = activeOrders.length + 1;
@@ -104,6 +118,8 @@ app.post("/order", (req: Request, res: Response) => {
 app.put("/order", (req, res) => {
   try {
     const newOrder = req.body as Order;
+
+    console.log(newOrder);
     const prevOrderIndex = activeOrders.findIndex(
       (order) => order.id === newOrder.id
     );
@@ -119,7 +135,7 @@ app.put("/order", (req, res) => {
     validateOrder(newOrder);
 
     const itemStatuses = newOrder.items.map((item) => item.status);
-    let newStatus: OrderStatus = prevOrder.status;
+    let newStatus: OrderStatus = newOrder.status;
 
     const contains = (status: OrderStatus) => {
       return itemStatuses.some((item) => item == status);
@@ -143,14 +159,6 @@ app.put("/order", (req, res) => {
       }
     }
 
-    const updatedOrder = {
-      ...newOrder,
-      id: prevOrder.id,
-      time: prevOrder.time,
-      origin: prevOrder.origin,
-      status: newStatus,
-    };
-
     if (newOrder.status === "FINISHED") {
       // Clean up table active orders
       const originTable = tables.find((table) => table.id === prevOrder.origin);
@@ -169,16 +177,21 @@ app.put("/order", (req, res) => {
         }
         return notification;
       });
-
     }
+
+    const updatedOrder = {
+      ...newOrder,
+      id: prevOrder.id,
+      time: prevOrder.time,
+      origin: prevOrder.origin,
+      status: newStatus,
+    };
 
     activeOrders = [
       ...activeOrders.slice(0, prevOrderIndex),
       updatedOrder,
       ...activeOrders.slice(prevOrderIndex + 1),
     ];
-
-    console.log(activeOrders);
 
     detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
       if (!update) return;
@@ -269,11 +282,11 @@ app.get("/tables", (req: Request, res: Response) => {
 app.get("/orders", (req: Request, res: Response) => {
   console.log(
     "active order",
-    activeOrders.filter((or) => or.status !== "FINISHED").length
+    activeOrders.map((or) => or.status)
   );
 
   return res.status(200).send({
-    activeOrders: activeOrders.filter((order) => order.status !== "FINISHED"),
+    activeOrders: activeOrders.filter((order) => order),
   });
 });
 
@@ -301,12 +314,22 @@ app.get(
   }
 );
 
-/* TODO: Flood protection */
 app.post("/assistance", (req: Request, res: Response) => {
   try {
     const data = req.body as { origin: number };
 
     if (!tableIds.includes(data.origin)) throw new Error("Invalid origin");
+
+    const existingRequest = notifications.find(
+      (notification) =>
+        notification.origin === data.origin &&
+        notification.type === "NEED_ASSISTANCE" &&
+        notification.active
+    );
+
+    if (existingRequest) {
+      return res.status(429).send({ message: "Request is already pending" });
+    }
 
     sendNotification(data.origin, "NEED_ASSISTANCE");
 
@@ -323,8 +346,22 @@ app.post("/check", (req: Request, res: Response) => {
 
     if (!tableIds.includes(data.origin)) throw new Error("Invalid origin");
 
+    const existingRequest = notifications.find(
+      (notification) =>
+        notification.origin === data.origin &&
+        notification.type === "CHECK_REQUESTED" &&
+        notification.active
+    );
+
+    if (existingRequest) {
+      return res.status(429).send({ message: "Request is already pending" });
+    }
+
     sendNotification(data.origin, "CHECK_REQUESTED", {
       orderID: activeOrders
+        .filter(
+          (order) => order.status !== "CANCELLED" && order.status !== "FINISHED"
+        )
         .filter(
           (order) => order.origin !== null && order.origin === data.origin
         )
