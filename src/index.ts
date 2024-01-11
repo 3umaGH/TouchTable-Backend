@@ -11,7 +11,6 @@ import {
 import { mockCategories, mockDishes, mockTables } from "./mockData";
 import { v4 as uuidv4 } from "uuid";
 import { detectOrderItemUpdate, getDishByID, validateOrder } from "./util";
-import { CANCELLED } from "dns";
 
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -30,6 +29,14 @@ let activeOrders: Order[] = [];
 let inactiveOrders: Order[] = [];
 
 let notifications: Notification[] = [];
+
+// Ping simulator
+app.use((req, res, next) => {
+  setTimeout(
+    () => next(),
+    Math.random() >= 0.3 ? Math.random() * 200 : Math.random() * 800
+  );
+});
 
 const sendNotification = (
   origin: number,
