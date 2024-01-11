@@ -359,9 +359,7 @@ app.post("/check", (req: Request, res: Response) => {
 
     sendNotification(data.origin, "CHECK_REQUESTED", {
       orderID: activeOrders
-        .filter(
-          (order) => order.status !== "CANCELLED" && order.status !== "FINISHED"
-        )
+        .filter((order) => order.status !== "FINISHED")
         .filter(
           (order) => order.origin !== null && order.origin === data.origin
         )
