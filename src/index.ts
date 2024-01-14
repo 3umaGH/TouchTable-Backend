@@ -153,6 +153,10 @@ io.on("connection", (socket) => {
           }
           return notification;
         });
+
+        io.to(`${restaurantID}_table_${newOrder.origin}`).emit(
+          "tableSessionClear"
+        );
       }
 
       const updatedOrder = {
@@ -204,8 +208,6 @@ io.on("connection", (socket) => {
         .to(`${restaurantID}_kitchen`)
         .to(`${restaurantID}_table_${newOrder.origin}`)
         .emit("orderUpdate", updatedOrder);
-
-        console.log(updatedOrder)
 
       callback(updatedOrder);
     } catch (err) {
