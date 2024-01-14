@@ -97,6 +97,7 @@ export type Notification = {
   extraData: {
     orderItemID?: string;
     orderID?: number[];
+    paymentBy?: "cash" | "card"
   };
 };
 

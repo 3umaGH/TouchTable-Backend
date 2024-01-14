@@ -346,6 +346,7 @@ io.on("connection", (socket) => {
               (order) => order.origin !== null && order.origin === tableID
             )
             .map((order) => order.id as number),
+            paymentBy: paymentBy,
         });
 
         return callback(true);
@@ -361,15 +362,10 @@ io.on("connection", (socket) => {
   });
 });
 
-// Ping simulator
-app.use((req, res, next) => {
-  setTimeout(() => next(), 250);
-});
-
 const sendNotification = (
   origin: number,
   type: NotificationType,
-  extraData?: { orderItemID?: string; orderID: number[] }
+  extraData?: { orderItemID?: string; orderID?: number[], paymentBy?: "cash" | "card" }
 ) => {
   const notification: Notification = {
     id: uuidv4(),
@@ -387,9 +383,14 @@ const sendNotification = (
   if (extraData?.orderID !== undefined)
     notification.extraData.orderID = extraData.orderID;
 
+    if(extraData?.paymentBy !== undefined)
+    notification.extraData.paymentBy = extraData.paymentBy;
+
   notifications.push(notification);
 
   io.to(`${restaurantID}_waiters`).emit("newNotification", notification);
+
+  console.log(notification)
 };
 
 app.use(cors());
