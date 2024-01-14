@@ -106,3 +106,8 @@ export type OrderItemUpdateEvent = {
   type: OrderItemUpdateType;
   item: OrderItem;
 };
+
+export type RestaurantData = {
+  dishes: Dish[];
+  categories: Category[];
+};

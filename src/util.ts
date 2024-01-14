@@ -6,7 +6,7 @@ import {
   OrderItemUpdateEvent,
   OrderItemUpdateType,
   OrderStatuses,
-} from "./types/globalTypes";
+} from "./types/restaurant";
 
 export const validateOrder = (order: Order): void => {
   order.items.every((item) => {
