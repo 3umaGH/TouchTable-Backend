@@ -13,10 +13,17 @@ import {
   ServerToClientEvents,
   InterServerEvents,
 } from "./types/socket";
-import { mockCategories, mockDishes, mockTables } from "./mockData";
+import {
+  mockCategories,
+  mockCategories1,
+  mockDishes,
+  mockDishes1,
+  mockTables,
+} from "./mockData";
 import { v4 as uuidv4 } from "uuid";
 import { detectOrderItemUpdate, getDishByID, validateOrder } from "./util";
 import { Server } from "socket.io";
+import { Restaurant } from "./classes/Restaurant";
 
 require("socket.io");
 
@@ -33,6 +40,21 @@ const io = new Server<
   },
 });
 
+const restaurant = new Restaurant(0, "Name", "", mockDishes, mockCategories, 5);
+const restaurant2 = new Restaurant(
+  1,
+  "Name",
+  "",
+  mockDishes1,
+  mockCategories1,
+  5
+);
+
+export const restaurants = new Map();
+
+restaurants.set(0, restaurant);
+restaurants.set(1, restaurant2);
+
 io.listen(3001);
 
 const dotenv = require("dotenv");
@@ -43,32 +65,43 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-const tables: Table[] = mockTables;
-const tableIds = tables.map((table) => table.id);
-
-export const dishes = mockDishes;
-
-let activeOrders: Order[] = [];
-let notifications: Notification[] = [];
-
-const restaurantID = 0;
-
 io.on("connection", (socket) => {
-  console.log("new client", socket.id);
-
   socket.on("joinRoom", (restaurantID, room, callback) => {
-    socket.join(`${restaurantID}_${room}`);
-    callback(true);
+    try {
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
+
+      socket.join(`${restaurantID}_${room}`);
+      callback(true);
+    } catch (err) {
+      if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
+    }
   });
 
   socket.on("getRestaurantNotifications", (restaurantID, callback) => {
-    callback(notifications);
+    try {
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
+
+      callback(restaurant.notifications);
+    } catch (err) {
+      if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
+    }
   });
 
-  socket.on("setNotificationInactive", (id, callback) => {
-    const notification = notifications.find((notif) => notif.id === id);
+  socket.on("setNotificationInactive", (restaurantID, id, callback) => {
+    try {
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
 
-    if (notification) {
+      const notification = restaurant.notifications.find(
+        (notif) => notif.id === id
+      );
+
+      if (!notification) throw new Error("Notification could not be found");
+
       notification.active = false;
       callback(notification);
 
@@ -76,29 +109,39 @@ io.on("connection", (socket) => {
         "notificationStatusUpdate",
         notification
       );
-    } else
-      callback({
-        error: true,
-        message: "Notification with this ID cannot be found",
-      });
+    } catch (err) {
+      if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
+    }
   });
 
-  socket.on("getRestaurantOrders", (id, callback) => {
-    callback(activeOrders);
+  socket.on("getRestaurantOrders", (restaurantID, callback) => {
+    try {
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
+
+      callback(restaurant.orders);
+    } catch (err) {
+      if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
+    }
   });
 
   socket.on("updateOrder", (restaurantID, id, newOrder, callback) => {
     try {
-      const prevOrderIndex = activeOrders.findIndex(
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
+
+      const prevOrderIndex = restaurant.orders.findIndex(
         (order) => order.id === newOrder.id
       );
 
       if (prevOrderIndex === -1)
-        throw new Error(`ERROR: Order ${newOrder.id} does not exist.`);
+        throw new Error(`Order ${newOrder.id} does not exist.`);
 
-      const prevOrder = activeOrders[prevOrderIndex];
+      const prevOrder = restaurant.orders[prevOrderIndex];
 
-      validateOrder(newOrder);
+      validateOrder(restaurantID, newOrder);
 
       const itemStatuses = newOrder.items.map((item) => item.status);
       let newStatus: OrderStatus = newOrder.status;
@@ -128,31 +171,32 @@ io.on("connection", (socket) => {
 
       if (newOrder.status === "FINISHED") {
         // Clean up table active orders
-        const originTable = tables.find(
+        const originTable = restaurant.tables.find(
           (table) => table.id === prevOrder.origin
         );
 
-        if (!originTable)
-          throw new Error("Unable to find origin table to delete active order");
+        if (!originTable) throw new Error("Unable to find origin table");
 
         originTable.activeOrders = originTable.activeOrders.filter(
           (id) => id !== newOrder.id
         );
 
         // Set notifications inactive that are associated with that table.
-        notifications = notifications.map((notification) => {
-          if (notification.origin === prevOrder.origin) {
-            const newNotification = { ...notification, active: false };
+        restaurant.notifications = restaurant.notifications.map(
+          (notification) => {
+            if (notification.origin === prevOrder.origin) {
+              const newNotification = { ...notification, active: false };
 
-            io.to(`${restaurantID}_waiters`)
-              .to(`${restaurantID}_kitchen`)
-              .to(`${restaurantID}_table_${newOrder.origin}`)
-              .emit("notificationStatusUpdate", newNotification);
+              io.to(`${restaurantID}_waiters`)
+                .to(`${restaurantID}_kitchen`)
+                .to(`${restaurantID}_table_${newOrder.origin}`)
+                .emit("notificationStatusUpdate", newNotification);
 
+              return notification;
+            }
             return notification;
           }
-          return notification;
-        });
+        );
 
         io.to(`${restaurantID}_table_${newOrder.origin}`).emit(
           "tableSessionClear"
@@ -167,31 +211,41 @@ io.on("connection", (socket) => {
         status: newStatus,
       };
 
-      activeOrders = [
-        ...activeOrders.slice(0, prevOrderIndex),
+      restaurant.orders = [
+        ...restaurant.orders.slice(0, prevOrderIndex),
         updatedOrder,
-        ...activeOrders.slice(prevOrderIndex + 1),
+        ...restaurant.orders.slice(prevOrderIndex + 1),
       ];
 
       detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
         if (!update) return;
         if (!newOrder.id) return;
 
-        const dish = getDishByID(update.item.dish.dishID);
+        const dish = getDishByID(restaurantID, update.item.dish.dishID);
         switch (update?.type) {
           case "IsPrepared": {
-            sendNotification(newOrder.origin, "READY_FOR_DELIVERY", {
-              orderID: [newOrder.id],
-              orderItemID: update.item.id,
-            });
+            sendNotification(
+              restaurantID,
+              newOrder.origin,
+              "READY_FOR_DELIVERY",
+              {
+                orderID: [newOrder.id],
+                orderItemID: update.item.id,
+              }
+            );
             break;
           }
 
           case "IsCancelled": {
-            sendNotification(newOrder.origin, "ORDER_ITEM_CANCELLED", {
-              orderID: [newOrder.id],
-              orderItemID: update.item.id,
-            });
+            sendNotification(
+              restaurantID,
+              newOrder.origin,
+              "ORDER_ITEM_CANCELLED",
+              {
+                orderID: [newOrder.id],
+                orderItemID: update.item.id,
+              }
+            );
             break;
           }
 
@@ -212,28 +266,34 @@ io.on("connection", (socket) => {
       callback(updatedOrder);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
     }
   });
 
   socket.on("createOrder", (restaurantID, order, callback) => {
     try {
-      const table = tables.find((table) => table.id === order.origin);
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
+
+      const table = restaurant.tables.find(
+        (table) => table.id === order.origin
+      );
 
       if (order.items.length === 0)
-        throw new Error("ERROR: Cannot accept an empty order.");
+        throw new Error("Cannot accept an empty order.");
 
-      if (!tableIds.includes(order.origin))
+      if (!(order.origin < restaurant.tables.length))
         throw new Error(
-          `ERROR: Table ID ${order.origin} does not exist. Did you check if the TableID is correct?`
+          `Table ID ${order.origin} does not exist. Did you check if the TableID is correct?`
         );
 
       if (!table)
         throw new Error(
-          `ERROR: Unable to assign order sent from table #${order.origin} to a table. Table is not found.`
+          `Unable to assign order sent from table #${order.origin} to a table. Table is not found.`
         );
 
       /* Prevent user from adding new items, while he is waiting for the check*/
-      const existingRequest = notifications.find(
+      const existingRequest = restaurant.notifications.find(
         (notification) =>
           notification.origin === order.origin &&
           notification.type === "CHECK_REQUESTED" &&
@@ -241,14 +301,16 @@ io.on("connection", (socket) => {
       );
 
       if (existingRequest) {
-        throw new Error(
-          `ERROR: Unable to add a new order, payment is in progress.`
-        );
+        throw new Error(`Unable to add a new order, payment is in progress.`);
       }
 
-      validateOrder(order);
+      validateOrder(restaurantID, order);
 
-      order.id = activeOrders.length + 1;
+      order.id =
+        restaurant.orders.reduce(
+          (maxId, order) => Math.max(order.id ?? 0, maxId),
+          -1
+        ) + 1;
       order.time = Date.now();
       order.status = "ORDER_RECEIVED";
       order.items = order.items.map((orderItem) => ({
@@ -257,9 +319,11 @@ io.on("connection", (socket) => {
       }));
 
       table.activeOrders = [...table.activeOrders, order.id];
-      activeOrders.push(order);
+      restaurant.orders.push(order);
 
-      sendNotification(order.origin, "NEW_ORDER", { orderID: [order.id] });
+      sendNotification(restaurantID, order.origin, "NEW_ORDER", {
+        orderID: [order.id],
+      });
 
       io.to(`${restaurantID}_waiters`)
         .to(`${restaurantID}_kitchen`)
@@ -274,18 +338,21 @@ io.on("connection", (socket) => {
 
   socket.on("getTableOrders", (restaurantID, tableID, callback) => {
     try {
-      const table = { ...tables[tableID] };
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
 
-      if (isNaN(tableID)) throw new Error(`ERROR: TableID is not a number.`);
+      const table = { ...restaurant.tables[tableID] };
+
+      if (isNaN(tableID)) throw new Error(`TableID is not a number.`);
 
       if (!table)
-        throw new Error(`ERROR: Table with ID ${tableID} could not be found.`);
+        throw new Error(`Table with ID ${tableID} could not be found.`);
 
       const updatedTable = {
         ...table,
         activeOrders: table.activeOrders
           .map((orderId) => {
-            const matchingOrder = activeOrders.find(
+            const matchingOrder = restaurant.orders.find(
               (fullOrder) => fullOrder.id === orderId
             );
             return matchingOrder;
@@ -296,18 +363,34 @@ io.on("connection", (socket) => {
       callback(updatedTable.activeOrders);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
     }
   });
 
-  socket.on("getRestaurantData", (id, callback) => {
-    callback({ dishes: mockDishes, categories: mockCategories });
+  socket.on("getRestaurantData", (restaurantID, callback) => {
+    try {
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
+
+      callback({
+        dishes: restaurant.dishes,
+        categories: restaurant.categories,
+      });
+    } catch (err) {
+      if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
+    }
   });
 
   socket.on("createAssistanceRequest", (restaurantID, tableID, callback) => {
     try {
-      if (!tableIds.includes(tableID)) throw new Error("Invalid origin");
+      const restaurant = restaurants.get(restaurantID) as Restaurant;
+      if (!restaurant) throw new Error("Invalid restaurant ID");
 
-      const existingRequest = notifications.find(
+      if (!(tableID < restaurant.tables.length))
+        throw new Error("Invalid origin");
+
+      const existingRequest = restaurant.notifications.find(
         (notification) =>
           notification.origin === tableID &&
           notification.type === "NEED_ASSISTANCE" &&
@@ -316,11 +399,12 @@ io.on("connection", (socket) => {
 
       if (existingRequest) throw new Error("Request is already pending");
 
-      sendNotification(tableID, "NEED_ASSISTANCE");
+      sendNotification(restaurantID, tableID, "NEED_ASSISTANCE");
 
       callback(true);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
+      else callback({ error: true, message: "Unknown Error" });
     }
   });
 
@@ -328,9 +412,13 @@ io.on("connection", (socket) => {
     "createCheckRequest",
     (restaurantID, tableID, paymentBy, callback) => {
       try {
-        if (!tableIds.includes(tableID)) throw new Error("Invalid origin");
+        const restaurant = restaurants.get(restaurantID) as Restaurant;
+        if (!restaurant) throw new Error("Invalid restaurant ID");
 
-        const existingRequest = notifications.find(
+        if (!(tableID < restaurant.tables.length))
+          throw new Error("Invalid origin");
+
+        const existingRequest = restaurant.notifications.find(
           (notification) =>
             notification.origin === tableID &&
             notification.type === "CHECK_REQUESTED" &&
@@ -339,20 +427,21 @@ io.on("connection", (socket) => {
 
         if (existingRequest) throw new Error("Request is already pending");
 
-        sendNotification(tableID, "CHECK_REQUESTED", {
-          orderID: activeOrders
+        sendNotification(restaurantID, tableID, "CHECK_REQUESTED", {
+          orderID: restaurant.orders
             .filter((order) => order.status !== "FINISHED")
             .filter(
               (order) => order.origin !== null && order.origin === tableID
             )
             .map((order) => order.id as number),
-            paymentBy: paymentBy,
+          paymentBy: paymentBy,
         });
 
         return callback(true);
       } catch (err) {
         if (err instanceof Error)
           callback({ error: true, message: err.message });
+        else callback({ error: true, message: "Unknown Error" });
       }
     }
   );
@@ -363,34 +452,46 @@ io.on("connection", (socket) => {
 });
 
 const sendNotification = (
+  restaurantID: number,
   origin: number,
   type: NotificationType,
-  extraData?: { orderItemID?: string; orderID?: number[], paymentBy?: "cash" | "card" }
+  extraData?: {
+    orderItemID?: string;
+    orderID?: number[];
+    paymentBy?: "cash" | "card";
+  }
 ) => {
-  const notification: Notification = {
-    id: uuidv4(),
-    time: Date.now(),
-    origin: origin,
-    type: type,
-    active: true,
+  try {
+    const restaurant = restaurants.get(restaurantID) as Restaurant;
+    if (!restaurant) throw new Error("Invalid restaurant ID");
 
-    extraData: {},
-  };
+    const notification: Notification = {
+      id: uuidv4(),
+      time: Date.now(),
+      origin: origin,
+      type: type,
+      active: true,
 
-  if (extraData?.orderItemID !== undefined)
-    notification.extraData.orderItemID = extraData.orderItemID;
+      extraData: {},
+    };
 
-  if (extraData?.orderID !== undefined)
-    notification.extraData.orderID = extraData.orderID;
+    if (extraData?.orderItemID !== undefined)
+      notification.extraData.orderItemID = extraData.orderItemID;
 
-    if(extraData?.paymentBy !== undefined)
-    notification.extraData.paymentBy = extraData.paymentBy;
+    if (extraData?.orderID !== undefined)
+      notification.extraData.orderID = extraData.orderID;
 
-  notifications.push(notification);
+    if (extraData?.paymentBy !== undefined)
+      notification.extraData.paymentBy = extraData.paymentBy;
 
-  io.to(`${restaurantID}_waiters`).emit("newNotification", notification);
+    restaurant.notifications.push(notification);
 
-  console.log(notification)
+    io.to(`${restaurantID}_waiters`).emit("newNotification", notification);
+
+    console.log(notification);
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 app.use(cors());

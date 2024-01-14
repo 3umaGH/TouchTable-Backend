@@ -347,3 +347,94 @@ export const mockCategories: Category[] = [
     title: "Ramen",
   },
 ];
+
+
+export const mockDishes1: Dish[] = [
+  {
+    id: 1,
+    categoryId: 0,
+    image: "https://t3.ftcdn.net/jpg/02/95/44/22/360_F_295442295_OXsXOmLmqBUfZreTnGo9PREuAPSLQhff.jpg",
+    price: 500000.00,
+    discount: 0,
+    params: {
+      title: "Ok this is seceond",
+      description:
+        "Fresh and healthy salad with grilled salmon. A delightful mix of greens, cherry tomatoes, cucumber, and avocado. Topped with perfectly grilled salmon fillet and drizzled with a zesty lemon vinaigrette.",
+      quantity: "300g",
+      ingredients: [
+        { name: "Mixed Greens", removable: true },
+        { name: "Cherry Tomatoes", removable: true },
+        { name: "Cucumber", removable: true },
+        { name: "Avocado", removable: true },
+        { name: "Grilled Salmon", removable: true },
+        { name: "Lemon Vinaigrette", removable: true },
+      ],
+      options: [
+        { option: "Extra Dressing", price: 1.0, enabled: true },
+        { option: "Croutons", price: 0.75, enabled: true },
+        { option: "Gluten-Free", price: 2.5, enabled: true },
+      ],
+      available: true,
+    },
+  },
+  {
+    id: 2,
+    categoryId: 0,
+    image: "https://wallpapers.com/images/hd/funny-profile-picture-7k1legjukiz1lju7.jpg",
+    price: 15722578.5,
+    discount: 87879,
+    params: {
+      title: "Resto",
+      description:
+        "Creamy mashed potatoes made with butter and cream. A classic and comforting side dish that pairs well with a variety of main courses.",
+      quantity: "200g",
+      ingredients: [
+        { name: "Potatoes", removable: false },
+        { name: "Butter", removable: true },
+        { name: "Cream", removable: true },
+        { name: "Salt", removable: false },
+        { name: "Chives", removable: true },
+      ],
+      options: [
+        { option: "Extra Butter", price: 1.0, enabled: true },
+        { option: "Garlic Infusion", price: 1.5, enabled: true },
+        { option: "Cheese Topping", price: 1.25, enabled: true },
+      ],
+      available: true,
+    },
+  },
+  {
+    id: 3,
+    categoryId: 0,
+    image: "https://thumbs.dreamstime.com/b/funny-face-baby-27701492.jpg",
+    price: 542378,
+    discount: 4567,
+    params: {
+      title: "Dumplings",
+      description:
+        "Savor delicious dumplings with a perfect balance of flavors. These dumplings are filled with a delightful mixture of meat and vegetables, wrapped in a thin dough and steamed to perfection.",
+      quantity: "~300g",
+      ingredients: [
+        { name: "Dumpling Dough", removable: false },
+        { name: "Meat and Vegetable Filling", removable: true },
+        { name: "Soy Sauce", removable: true },
+        { name: "Ginger", removable: true },
+        { name: "Green Onions", removable: true },
+        { name: "Sesame Oil", removable: true },
+      ],
+      options: [
+        { option: "Extra Soy Sauce", price: 0.75, enabled: true },
+        { option: "Spicy Dipping Sauce", price: 1.0, enabled: true },
+        { option: "Vegetarian Filling", price: 1.5, enabled: true },
+      ],
+      available: true,
+    },
+  }
+]
+
+export const mockCategories1: Category[] = [
+  {
+    id: 0,
+    title: "onda piska",
+  },
+];

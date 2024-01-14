@@ -50,7 +50,7 @@ export interface ClientToServerEvents {
   ) => void;
 
   getRestaurantData: (
-    id: number,
+    restaurantID: number,
     callback: (e: RestaurantData | { error: boolean; message: string }) => void
   ) => void;
 
@@ -65,6 +65,7 @@ export interface ClientToServerEvents {
   ) => void;
 
   setNotificationInactive: (
+    restaurantID: number,
     id: string,
     callback: (e: Notification | { error: boolean; message: string }) => void
   ) => void;
