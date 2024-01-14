@@ -435,6 +435,10 @@ export const mockDishes1: Dish[] = [
 export const mockCategories1: Category[] = [
   {
     id: 0,
-    title: "onda piska",
+    title: "Categoria",
+  },
+  {
+    id: 1,
+    title: "Categoria222",
   },
 ];
