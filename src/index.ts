@@ -36,7 +36,7 @@ const io = new Server<
   pingTimeout: 7000,
   pingInterval: 3000,
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
   },
 });
 
@@ -219,9 +219,11 @@ io.on("connection", (socket) => {
 
       detectOrderItemUpdate(newOrder, prevOrder).forEach((update) => {
         if (!update) return;
-        if (!newOrder.id) return;
+        if (newOrder.id === null) return;
 
         const dish = getDishByID(restaurantID, update.item.dish.dishID);
+
+        console.log(update?.type, dish)
         switch (update?.type) {
           case "IsPrepared": {
             sendNotification(
@@ -350,7 +352,7 @@ io.on("connection", (socket) => {
 
       const updatedTable = {
         ...table,
-        activeOrders: table.activeOrders
+        orders: table.activeOrders
           .map((orderId) => {
             const matchingOrder = restaurant.orders.find(
               (fullOrder) => fullOrder.id === orderId
@@ -360,7 +362,7 @@ io.on("connection", (socket) => {
           .filter((order) => order !== undefined) as Order[],
       };
 
-      callback(updatedTable.activeOrders);
+      callback(updatedTable.orders);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
