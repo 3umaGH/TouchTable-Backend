@@ -33,7 +33,7 @@ export class Restaurant {
     this.dishes = dishes;
     this.categories = categories;
 
-    for (let i = -1; i < tablesAmount; i++) {
+    for (let i = 0; i < tablesAmount; i++) {
       this.tables.push({ id: i, activeOrders: [] });
     }
   }
