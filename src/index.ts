@@ -73,6 +73,8 @@ io.on("connection", (socket) => {
 
       socket.join(`${restaurantID}_${room}`);
       callback(true);
+
+      console.log(`Successfull room join to ${restaurantID}_${room}`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -85,6 +87,7 @@ io.on("connection", (socket) => {
       if (!restaurant) throw new Error("Invalid restaurant ID");
 
       callback(restaurant.notifications);
+      console.log(`[${restaurantID}] Retreive restaurant notifications`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -105,6 +108,10 @@ io.on("connection", (socket) => {
       notification.active = false;
       callback(notification);
 
+      console.log(
+        `[${restaurantID}] Set Notification #${notification.id} inactive.`
+      );
+
       io.to(`${restaurantID}_waiters`).emit(
         "notificationStatusUpdate",
         notification
@@ -121,6 +128,7 @@ io.on("connection", (socket) => {
       if (!restaurant) throw new Error("Invalid restaurant ID");
 
       callback(restaurant.orders);
+      console.log(`[${restaurantID}] Retreive restaurant orders`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -129,6 +137,7 @@ io.on("connection", (socket) => {
 
   socket.on("updateOrder", (restaurantID, id, newOrder, callback) => {
     try {
+
       const restaurant = restaurants.get(restaurantID) as Restaurant;
       if (!restaurant) throw new Error("Invalid restaurant ID");
 
@@ -197,10 +206,12 @@ io.on("connection", (socket) => {
             return notification;
           }
         );
+        
 
         io.to(`${restaurantID}_table_${newOrder.origin}`).emit(
           "tableSessionClear"
         );
+        console.log(`[${restaurantID}] Forcing Table #${newOrder.origin} session reset`);
       }
 
       const updatedOrder = {
@@ -223,7 +234,6 @@ io.on("connection", (socket) => {
 
         const dish = getDishByID(restaurantID, update.item.dish.dishID);
 
-        console.log(update?.type, dish)
         switch (update?.type) {
           case "IsPrepared": {
             sendNotification(
@@ -266,6 +276,10 @@ io.on("connection", (socket) => {
         .emit("orderUpdate", updatedOrder);
 
       callback(updatedOrder);
+
+      console.log(
+        `[${restaurantID}] Update order from ${prevOrder} =====>>>>> ${newOrder}`
+      );
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -333,6 +347,8 @@ io.on("connection", (socket) => {
         .emit("newOrderCreated", order);
 
       callback(order);
+
+      console.log(`[${restaurantID}] Create Order ${order.id}`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
     }
@@ -363,6 +379,7 @@ io.on("connection", (socket) => {
       };
 
       callback(updatedTable.orders);
+      console.log(`[${restaurantID}] Retreive table orders`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -378,6 +395,8 @@ io.on("connection", (socket) => {
         dishes: restaurant.dishes,
         categories: restaurant.categories,
       });
+
+      console.log(`[${restaurantID}] Retreive restaurant dishes & categories`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -404,6 +423,7 @@ io.on("connection", (socket) => {
       sendNotification(restaurantID, tableID, "NEED_ASSISTANCE");
 
       callback(true);
+      console.log(`[${restaurantID}] New assistance request Table #${tableID}`);
     } catch (err) {
       if (err instanceof Error) callback({ error: true, message: err.message });
       else callback({ error: true, message: "Unknown Error" });
@@ -439,7 +459,10 @@ io.on("connection", (socket) => {
           paymentBy: paymentBy,
         });
 
-        return callback(true);
+        callback(true);
+        console.log(
+          `[${restaurantID}] New check request Table #${tableID} (${paymentBy})`
+        );
       } catch (err) {
         if (err instanceof Error)
           callback({ error: true, message: err.message });
@@ -448,9 +471,7 @@ io.on("connection", (socket) => {
     }
   );
 
-  socket.on("disconnect", (socket) => {
-    console.log("disconnect", socket);
-  });
+  socket.on("disconnect", (socket) => {});
 });
 
 const sendNotification = (
@@ -487,10 +508,9 @@ const sendNotification = (
       notification.extraData.paymentBy = extraData.paymentBy;
 
     restaurant.notifications.push(notification);
+    console.log(`[${restaurantID}] Sent new notification ${type}`);
 
     io.to(`${restaurantID}_waiters`).emit("newNotification", notification);
-
-    console.log(notification);
   } catch (err) {
     console.log(err);
   }
