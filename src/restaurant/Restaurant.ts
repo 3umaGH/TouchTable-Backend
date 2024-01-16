@@ -75,11 +75,14 @@ export class Restaurant extends EventEmitter {
 
     if (!notification) throw new Error("Notification could not be found");
 
-    notification.active = false;
+    if (notification.active) {
+      notification.active = false;
 
-    this.emit("notificationStatusUpdate", notification);
-
-    console.log(`[${this.id}] Set Notification #${notification.id} inactive.`);
+      this.emit("notificationStatusUpdate", notification);
+      console.log(
+        `[${this.id}] Set Notification #${notification.id} inactive.`
+      );
+    }
   };
 
   createOrder = (order: Order) => {
@@ -195,7 +198,7 @@ export class Restaurant extends EventEmitter {
 
     if (existingRequest) throw new Error("Request is already pending");
 
-    this.emit("assistanceRequest", origin);
+    this.emit("assistanceRequest", tableID);
 
     console.log(`[${this.id}] New assistance request Table #${tableID}`);
   };
