@@ -51,14 +51,10 @@ export const validateOrder = (restaurantID: number, order: Order): void => {
 };
 
 export const getDishByID = (restaurantID: number, id: number) => {
-  try {
     const restaurant = restaurants.get(restaurantID) as Restaurant;
     if (!restaurant) throw new Error("Invalid restaurant ID");
 
     return restaurant.dishes.find((dish) => dish.id === id);
-  } catch (err) {
-    console.log(err);
-  }
 };
 
 export const catchError = (
