@@ -13,6 +13,7 @@ import { Server } from "socket.io";
 import { Restaurant } from "./restaurant/Restaurant";
 import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";
 import { SocketManager } from "./socket/SocketManager";
+import { StatisticsManager } from "./statistics/StatisticsManager";
 
 require("socket.io");
 
@@ -43,7 +44,7 @@ const restaurant2 = new Restaurant(
 export const restaurants = new Map<number, Restaurant>();
 
 restaurants.set(0, restaurant);
-restaurants.set(1, restaurant2);
+//restaurants.set(1, restaurant2);
 
 const aggregator = new RestaurantAggregator(restaurants);
 aggregator.initalizeListeners();
@@ -51,3 +52,6 @@ aggregator.initalizeListeners();
 const socketManager = new SocketManager(aggregator);
 socketManager.startListening(3001);
 socketManager.initalizeListeners();
+
+const statisticsManager = new StatisticsManager(aggregator);
+statisticsManager.initalizeListeners();

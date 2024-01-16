@@ -206,7 +206,7 @@ export class SocketManager {
         (restaurantID, tableID, callback) => {
           try {
             const restaurant = this.getRestaurantById(restaurantID);
-
+            
             restaurant.sendAssistanceRequest(tableID);
 
             callback(true);
