@@ -81,14 +81,16 @@ export class RestaurantAggregator extends EventEmitter {
 
       restaurant.on("assistanceRequest", (origin: number) => {
         this.sendNotification(restaurant, origin, "NEED_ASSISTANCE");
+
+        this.emit("assistanceRequest", restaurant.id);
       });
 
       restaurant.on(
         "checkRequest",
         (origin: number, paymentBy: "cash" | "card") => {
-          const originOrders = restaurant.orders
-            .filter((order) => order.origin !== null && order.origin === origin)
-            .filter((order) => order.status !== "FINISHED");
+          const originOrders = restaurant.getTableOrders(origin);
+          /*.filter((order) => order.origin !== null && order.origin === origin)
+            .filter((order) => order.status !== "FINISHED");*/
 
           this.sendNotification(restaurant, origin, "CHECK_REQUESTED", {
             orderID: originOrders.map((order) => order.id as number),
