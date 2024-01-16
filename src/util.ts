@@ -50,49 +50,6 @@ export const validateOrder = (restaurantID: number, order: Order): void => {
   });
 };
 
-export const detectOrderItemUpdate = (newOrder: Order, prevOrder: Order) => {
-  const updates: OrderItemUpdateEvent[] = [];
-
-  newOrder.items.forEach((newItem) => {
-    const prevItem = prevOrder.items.find((item) => item.id === newItem.id);
-
-    if (!prevItem) {
-      return;
-    }
-
-    let type: OrderItemUpdateType | null = null;
-
-    switch (true) {
-      case prevItem.status === OrderItemStatuses.INIT &&
-        newItem.status === OrderItemStatuses.IN_PROGRESS:
-        type = "IsPreparing";
-        break;
-
-      case prevItem.status === OrderItemStatuses.IN_PROGRESS &&
-        newItem.status === OrderItemStatuses.PREPARED:
-        type = "IsPrepared";
-        break;
-
-      case prevItem.status === OrderItemStatuses.IN_PROGRESS &&
-        newItem.status === OrderItemStatuses.CANCELLED:
-        type = "IsCancelled";
-        break;
-
-      case prevItem.status === OrderItemStatuses.INIT &&
-        newItem.status === OrderItemStatuses.CANCELLED:
-        type = "IsCancelled";
-        break;
-
-      default:
-        break;
-    }
-
-    if (type) updates.push({ type: type, item: newItem });
-  });
-
-  return updates;
-};
-
 export const getDishByID = (restaurantID: number, id: number) => {
   try {
     const restaurant = restaurants.get(restaurantID) as Restaurant;
