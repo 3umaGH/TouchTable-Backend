@@ -1,5 +1,5 @@
 import { restaurants } from ".";
-import { Restaurant } from "./classes/Restaurant";
+import { Restaurant } from "./restaurant/Restaurant";
 import {
   Order,
   OrderItem,
@@ -10,47 +10,44 @@ import {
 } from "./types/restaurant";
 
 export const validateOrder = (restaurantID: number, order: Order): void => {
-  try {
-    const restaurant = restaurants.get(restaurantID) as Restaurant;
-    if (!restaurant) throw new Error("Invalid restaurant ID");
+  const restaurant = restaurants.get(restaurantID) as Restaurant;
+  if (!restaurant) throw new Error("Invalid restaurant ID");
 
-    order.items.every((item) => {
-      const dish = restaurant.dishes.find(
-        (dish) => dish.id === item.dish.dishID
-      );
+  order.items.every((item) => {
+    const dish = restaurant.dishes.find((dish) => dish.id === item.dish.dishID);
 
-      if (!dish) throw new Error("Invalid dish ID.");
+    if (item.amount <= 0 || item.amount > 10)
+      throw new Error("Item amount should be between 1-10.");
 
-      if (!OrderItemStatuses.hasOwnProperty(item.status))
-        throw new Error("Invalid orderItem status.");
+    if (!dish) throw new Error("Invalid dish ID.");
 
-      if (!OrderStatuses.hasOwnProperty(order.status))
-        throw new Error("Invalid order status.");
+    if (!OrderItemStatuses.hasOwnProperty(item.status))
+      throw new Error("Invalid orderItem status.");
 
-      const isValidOption = item.dish.addedOptions.every((clientOption) =>
-        dish.params.options.some(
-          (trueOption) =>
-            trueOption.option === clientOption.option &&
-            trueOption.enabled === true
+    if (!OrderStatuses.hasOwnProperty(order.status))
+      throw new Error("Invalid order status.");
+
+    const isValidOption = item.dish.addedOptions.every((clientOption) =>
+      dish.params.options.some(
+        (trueOption) =>
+          trueOption.option === clientOption.option &&
+          trueOption.enabled === true
+      )
+    );
+
+    const isValidIngredient = item.dish.removedIngredients.every(
+      (clientIngredient) =>
+        dish.params.ingredients.some(
+          (trueIngredient) =>
+            trueIngredient.name === clientIngredient.name &&
+            trueIngredient.removable === true
         )
-      );
+    );
 
-      const isValidIngredient = item.dish.removedIngredients.every(
-        (clientIngredient) =>
-          dish.params.ingredients.some(
-            (trueIngredient) =>
-              trueIngredient.name === clientIngredient.name &&
-              trueIngredient.removable === true
-          )
-      );
+    if (!isValidOption) throw new Error("Invalid dish options.");
 
-      if (!isValidOption) throw new Error("Invalid dish options.");
-
-      if (!isValidIngredient) throw new Error("Invalid dish ingredient.");
-    });
-  } catch (err) {
-    console.log(err);
-  }
+    if (!isValidIngredient) throw new Error("Invalid dish ingredient.");
+  });
 };
 
 export const detectOrderItemUpdate = (newOrder: Order, prevOrder: Order) => {
@@ -105,4 +102,19 @@ export const getDishByID = (restaurantID: number, id: number) => {
   } catch (err) {
     console.log(err);
   }
+};
+
+export const catchError = (
+  err: any,
+  callback: (
+    e:
+      | any
+      | {
+          error: boolean;
+          message: string;
+        }
+  ) => void
+) => {
+  if (err instanceof Error) callback({ error: true, message: err.message });
+  else callback({ error: true, message: "Unknown Error" });
 };

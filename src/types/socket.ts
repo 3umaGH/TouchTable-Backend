@@ -1,4 +1,11 @@
-import { Order, RestaurantData, Table, Notification } from "./restaurant";
+import {
+  Order,
+  RestaurantData,
+  Table,
+  Notification,
+  OrderStatus,
+  OrderItemStatus,
+} from "./restaurant";
 
 export interface ServerToClientEvents {
   newNotification: (notification: Notification) => void;
@@ -23,11 +30,19 @@ export interface ClientToServerEvents {
     callback: (e: Order | { error: boolean; message: string }) => void
   ) => void;
 
-  updateOrder: (
+  updateOrderStatus: (
     restaurantID: number,
     id: number,
-    order: Order,
-    callback: (e: Order | { error: boolean; message: string }) => void
+    newStatus: OrderStatus,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  updateOrderItemStatus: (
+    restaurantID: number,
+    orderID: number,
+    orderItemID: string,
+    newStatus: OrderItemStatus,
+    callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
   createCheckRequest: (
@@ -67,7 +82,7 @@ export interface ClientToServerEvents {
   setNotificationInactive: (
     restaurantID: number,
     id: string,
-    callback: (e: Notification | { error: boolean; message: string }) => void
+    callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 }
 
