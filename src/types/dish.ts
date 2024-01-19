@@ -26,8 +26,3 @@ export type Dish = {
     available: boolean;
   };
 };
-
-export type Category = {
-  id: number;
-  title: string;
-};

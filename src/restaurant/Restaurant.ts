@@ -1,8 +1,8 @@
-import { Table } from "../types/restaurant";
+import { Category, Table } from "../types/restaurant";
 import { validateOrder } from "../util";
 import { v4 as uuidv4 } from "uuid";
 import EventEmitter from "events";
-import { Category, Dish } from "../types/dish";
+import { Dish } from "../types/dish";
 import {
   Order,
   OrderItemStatus,

@@ -1,5 +1,5 @@
-import { Category, Dish } from "./types/dish";
-import { Table } from "./types/restaurant";
+import { Dish } from "./types/dish";
+import { Category, Table } from "./types/restaurant";
 
 export const mockTables: Table[] = [
   {
