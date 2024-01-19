@@ -3,6 +3,8 @@ import { Dish } from "./dish";
 export type RestaurantData = {
   dishes: Dish[];
   categories: Category[];
+
+  primaryColors: string[];
 };
 
 export type Table = {

@@ -19,6 +19,8 @@ export class Restaurant extends EventEmitter {
   dishes: Dish[];
   categories: Category[];
 
+  primaryColors: string[];
+
   orders: Order[] = [];
   notifications: Notification[] = [];
 
@@ -31,6 +33,7 @@ export class Restaurant extends EventEmitter {
     dishes: Dish[],
     categories: Category[],
 
+    primaryColors: string[],
     tablesAmount: number
   ) {
     super();
@@ -39,6 +42,8 @@ export class Restaurant extends EventEmitter {
     this.logo = logo;
     this.dishes = dishes;
     this.categories = categories;
+
+    this.primaryColors = primaryColors;
 
     for (let i = 0; i < tablesAmount; i++) {
       this.tables.push({ id: i, activeOrders: [] });
@@ -59,6 +64,10 @@ export class Restaurant extends EventEmitter {
 
   getDishes = () => {
     return this.dishes;
+  };
+
+  getPrimaryColors = () => {
+    return this.primaryColors;
   };
 
   getOrderByID = (id: number) => {

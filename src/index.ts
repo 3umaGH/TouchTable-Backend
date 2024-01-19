@@ -3,10 +3,7 @@ import {
   ServerToClientEvents,
   InterServerEvents,
 } from "./types/socket";
-import {
-  mockCategories,
-  mockDishes,
-} from "./mockData";
+import { mockCategories, mockDishes } from "./mockData";
 import { Server } from "socket.io";
 import { Restaurant } from "./restaurant/Restaurant";
 import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";
@@ -18,7 +15,7 @@ require("socket.io");
 const io = new Server<
   ClientToServerEvents,
   ServerToClientEvents,
-  InterServerEvents
+  InterServerEvents 
 >({
   connectionStateRecovery: {},
   pingTimeout: 7000,
@@ -29,7 +26,15 @@ const io = new Server<
 });
 
 /* Mock restaurants */
-const restaurant = new Restaurant(0, "Name", "", mockDishes, mockCategories, 5);
+const restaurant = new Restaurant(
+  0,
+  "Name",
+  "",
+  mockDishes,
+  mockCategories,
+  ["#32BB78", "#44b87f", "#547570"],
+  5
+);
 
 export const restaurants = new Map<number, Restaurant>();
 
