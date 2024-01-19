@@ -1,6 +1,5 @@
-import { Restaurant } from "../restaurant/Restaurant";
 import { RestaurantAggregator } from "../restaurant/RestaurantAggregator";
-import { Order } from "../types/restaurant";
+import { Order } from "../types/order";
 import { Statistics } from "./Statistics";
 
 export class StatisticsManager {

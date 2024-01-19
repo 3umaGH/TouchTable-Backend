@@ -1,13 +1,7 @@
 import { EventEmitter } from "stream";
 import { Restaurant } from "./Restaurant";
-import {
-  Notification,
-  NotificationType,
-  Order,
-  OrderItem,
-  OrderItemStatus,
-  OrderStatus,
-} from "../types/restaurant";
+import { Order, OrderItem, OrderItemStatus, OrderStatus } from "../types/order";
+import { Notification, NotificationType } from "../types/notification";
 import { v4 as uuidv4 } from "uuid";
 
 export class RestaurantAggregator extends EventEmitter {

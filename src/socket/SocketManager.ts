@@ -6,7 +6,8 @@ import {
 } from "../types/socket";
 import { RestaurantAggregator } from "../restaurant/RestaurantAggregator";
 import { catchError } from "../util";
-import { Notification, Order, OrderItem } from "../types/restaurant";
+import { Order, OrderItem } from "../types/order";
+import { Notification } from "../types/notification";
 
 export class SocketManager {
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents>;
@@ -206,7 +207,7 @@ export class SocketManager {
         (restaurantID, tableID, callback) => {
           try {
             const restaurant = this.getRestaurantById(restaurantID);
-            
+
             restaurant.sendAssistanceRequest(tableID);
 
             callback(true);

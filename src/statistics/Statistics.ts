@@ -1,5 +1,5 @@
 import { Restaurant } from "../restaurant/Restaurant";
-import { Order, OrderItem } from "../types/restaurant";
+import { Order, OrderItem } from "../types/order";
 
 type StatsKey = {
   startTime: number;

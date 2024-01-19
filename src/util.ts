@@ -1,13 +1,7 @@
 import { restaurants } from ".";
 import { Restaurant } from "./restaurant/Restaurant";
-import {
-  Order,
-  OrderItem,
-  OrderItemStatuses,
-  OrderItemUpdateEvent,
-  OrderItemUpdateType,
-  OrderStatuses,
-} from "./types/restaurant";
+import { Order, OrderItemStatuses, OrderStatuses } from "./types/order";
+import {} from "./types/restaurant";
 
 export const validateOrder = (restaurantID: number, order: Order): void => {
   const restaurant = restaurants.get(restaurantID) as Restaurant;
@@ -51,10 +45,10 @@ export const validateOrder = (restaurantID: number, order: Order): void => {
 };
 
 export const getDishByID = (restaurantID: number, id: number) => {
-    const restaurant = restaurants.get(restaurantID) as Restaurant;
-    if (!restaurant) throw new Error("Invalid restaurant ID");
+  const restaurant = restaurants.get(restaurantID) as Restaurant;
+  if (!restaurant) throw new Error("Invalid restaurant ID");
 
-    return restaurant.dishes.find((dish) => dish.id === id);
+  return restaurant.dishes.find((dish) => dish.id === id);
 };
 
 export const catchError = (

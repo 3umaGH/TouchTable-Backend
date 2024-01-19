@@ -1,17 +1,16 @@
+import { Table } from "../types/restaurant";
+import { validateOrder } from "../util";
+import { v4 as uuidv4 } from "uuid";
+import EventEmitter from "events";
+import { Category, Dish } from "../types/dish";
 import {
-  Category,
-  Dish,
-  Notification,
   Order,
   OrderItemStatus,
   OrderItemStatuses,
   OrderStatus,
   OrderStatuses,
-  Table,
-} from "../types/restaurant";
-import { validateOrder } from "../util";
-import { v4 as uuidv4 } from "uuid";
-import EventEmitter from "events";
+} from "../types/order";
+import { Notification } from "../types/notification";
 
 export class Restaurant extends EventEmitter {
   id: number;
