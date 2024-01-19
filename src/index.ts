@@ -5,9 +5,7 @@ import {
 } from "./types/socket";
 import {
   mockCategories,
-  mockCategories1,
   mockDishes,
-  mockDishes1,
 } from "./mockData";
 import { Server } from "socket.io";
 import { Restaurant } from "./restaurant/Restaurant";
@@ -32,19 +30,10 @@ const io = new Server<
 
 /* Mock restaurants */
 const restaurant = new Restaurant(0, "Name", "", mockDishes, mockCategories, 5);
-const restaurant2 = new Restaurant(
-  1,
-  "Name",
-  "",
-  mockDishes1,
-  mockCategories1,
-  5
-);
 
 export const restaurants = new Map<number, Restaurant>();
 
 restaurants.set(0, restaurant);
-//restaurants.set(1, restaurant2);
 
 const aggregator = new RestaurantAggregator(restaurants);
 aggregator.initalizeListeners();
