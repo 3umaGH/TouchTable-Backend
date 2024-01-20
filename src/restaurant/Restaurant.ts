@@ -11,15 +11,15 @@ import {
   OrderStatuses,
 } from "../types/order";
 import { Notification } from "../types/notification";
+import { ThemeProps } from "../types/theme";
 
 export class Restaurant extends EventEmitter {
   id: number;
   name: string;
   logo: string;
+  theme: ThemeProps;
   dishes: Dish[];
   categories: Category[];
-
-  primaryColors: string[];
 
   orders: Order[] = [];
   notifications: Notification[] = [];
@@ -30,20 +30,19 @@ export class Restaurant extends EventEmitter {
     id: number,
     name: string,
     logo: string,
+    theme: ThemeProps,
     dishes: Dish[],
     categories: Category[],
 
-    primaryColors: string[],
     tablesAmount: number
   ) {
     super();
     this.id = id;
     this.name = name;
     this.logo = logo;
+    this.theme = theme;
     this.dishes = dishes;
     this.categories = categories;
-
-    this.primaryColors = primaryColors;
 
     for (let i = 0; i < tablesAmount; i++) {
       this.tables.push({ id: i, activeOrders: [] });
@@ -66,8 +65,8 @@ export class Restaurant extends EventEmitter {
     return this.dishes;
   };
 
-  getPrimaryColors = () => {
-    return this.primaryColors;
+  getTheme = () => {
+    return this.theme;
   };
 
   getOrderByID = (id: number) => {

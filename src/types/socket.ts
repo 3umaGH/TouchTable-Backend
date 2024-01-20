@@ -1,11 +1,6 @@
-import {
-  Order,
-  RestaurantData,
-  Table,
-  Notification,
-  OrderStatus,
-  OrderItemStatus,
-} from "./restaurant";
+import { Notification } from "./notification";
+import { Order, OrderItemStatus, OrderStatus } from "./order";
+import { RestaurantData } from "./restaurant";
 
 export interface ServerToClientEvents {
   newNotification: (notification: Notification) => void;

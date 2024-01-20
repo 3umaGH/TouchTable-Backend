@@ -194,7 +194,7 @@ export class SocketManager {
           const response = {
             dishes: restaurant.getDishes(),
             categories: restaurant.getCategories(),
-            primaryColors: restaurant.getPrimaryColors(),
+            theme: restaurant.getTheme(),
           };
 
           callback(response);

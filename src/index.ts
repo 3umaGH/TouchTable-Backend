@@ -15,7 +15,7 @@ require("socket.io");
 const io = new Server<
   ClientToServerEvents,
   ServerToClientEvents,
-  InterServerEvents 
+  InterServerEvents
 >({
   connectionStateRecovery: {},
   pingTimeout: 7000,
@@ -25,14 +25,28 @@ const io = new Server<
   },
 });
 
+const lightTheme = {
+  primary200: "#1448c9",
+  primary300: "#405ca3",
+  primary600: "#2449a6",
+  isLightTheme: true,
+};
+
+const darkTheme = {
+  primary200: "#cc5879",
+  primary300: "#c72c58",
+  primary600: "#c91448",
+  isLightTheme: false,
+};
+
 /* Mock restaurants */
 const restaurant = new Restaurant(
   0,
   "Name",
   "",
+  darkTheme,
   mockDishes,
   mockCategories,
-  ["#32BB78", "#44b87f", "#547570"],
   5
 );
 
