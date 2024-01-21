@@ -5,6 +5,7 @@ export type RestaurantData = {
   dishes: Dish[];
   categories: Category[];
   theme: ThemeProps;
+  logo: string;
 };
 
 export type Table = {

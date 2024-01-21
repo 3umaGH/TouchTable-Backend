@@ -69,6 +69,10 @@ export class Restaurant extends EventEmitter {
     return this.theme;
   };
 
+  getLogo = () => {
+    return this.logo;
+  }
+
   getOrderByID = (id: number) => {
     const order = this.orders.find((order) => order.id == id);
 

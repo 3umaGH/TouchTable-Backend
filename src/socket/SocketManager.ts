@@ -195,6 +195,7 @@ export class SocketManager {
             dishes: restaurant.getDishes(),
             categories: restaurant.getCategories(),
             theme: restaurant.getTheme(),
+            logo: restaurant.getLogo(),
           };
 
           callback(response);
