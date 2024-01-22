@@ -32,6 +32,7 @@ export class SocketManager {
 
   startListening = (port: number) => {
     this.io.listen(port);
+    console.log(`Listening on ${port} port.`)
   };
 
   initalizeListeners = () => {

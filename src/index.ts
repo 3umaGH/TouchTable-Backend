@@ -1,33 +1,16 @@
-import {
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-} from "./types/socket";
 import { mockCategories, mockDishes } from "./mockData";
-import { Server } from "socket.io";
 import { Restaurant } from "./restaurant/Restaurant";
 import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";
 import { SocketManager } from "./socket/SocketManager";
 import { StatisticsManager } from "./statistics/StatisticsManager";
 
 require("socket.io");
-
-const io = new Server<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents
->({
-  connectionStateRecovery: {},
-  pingTimeout: 7000,
-  pingInterval: 3000,
-  cors: {
-    origin: "*",
-  },
-});
+const app = require("express");
+const cors = require("cors");
 
 const theme = {
   primary300: "#f0676f",
-  primary600: "#EE5D65",
+  primary600: "D64550",
   isLightTheme: false,
 };
 
@@ -35,12 +18,14 @@ const theme = {
 const restaurant = new Restaurant(
   0,
   "Name",
-  "https://en.expensereduction.com/wp-content/uploads/2018/02/logo-placeholder.png",
+  "https://4m4you.com/wp-content/uploads/2020/06/logo-placeholder-300x120.png",
   theme,
   mockDishes,
   mockCategories,
   5
 );
+
+//app.use(cors());
 
 export const restaurants = new Map<number, Restaurant>();
 
