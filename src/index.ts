@@ -10,14 +10,14 @@ const cors = require("cors");
 
 const theme = {
   primary300: "#f0676f",
-  primary600: "D64550",
+  primary600: "#D64550",
   isLightTheme: false,
 };
 
 /* Mock restaurants */
 const restaurant = new Restaurant(
   0,
-  "Name",
+  "Bobs Ribs and Steak",
   "https://4m4you.com/wp-content/uploads/2020/06/logo-placeholder-300x120.png",
   theme,
   mockDishes,
@@ -34,9 +34,9 @@ restaurants.set(0, restaurant);
 const aggregator = new RestaurantAggregator(restaurants);
 aggregator.initalizeListeners();
 
-const socketManager = new SocketManager(aggregator);
-socketManager.startListening(3001);
-socketManager.initalizeListeners();
-
 const statisticsManager = new StatisticsManager(aggregator);
 statisticsManager.initalizeListeners();
+
+const socketManager = new SocketManager(aggregator, statisticsManager);
+socketManager.startListening(3001);
+socketManager.initalizeListeners();

@@ -26,4 +26,12 @@ export class StatisticsManager {
       this.restaurants.get(restaurantID)?.onAssistanceRequest();
     });
   };
+
+  getStatistics = (restaurantID: number) => {
+    const statistics = this.restaurants.get(restaurantID);
+
+    if (!statistics) throw new Error("Invalid Restaurant ID");
+
+    return statistics;
+  };
 }

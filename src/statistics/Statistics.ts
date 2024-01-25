@@ -1,27 +1,11 @@
 import { Restaurant } from "../restaurant/Restaurant";
 import { Order, OrderItem } from "../types/order";
+import { StatsKey } from "../types/statistics";
 
-type StatsKey = {
-  startTime: number;
 
-  orders: {
-    finished: number;
-    cancelled: number;
-    total: number;
-
-    totalItems: number;
-    totalTurnover: number;
-  };
-
-  notifications: {
-    assistanceRequests: number;
-  };
-
-  dishes: Record<string, number>;
-};
-
-const getInitVal = (restaurant: Restaurant, resetIntervalMinutes: number) => {
+const getInitVal = (timeFrame: string, restaurant: Restaurant, resetIntervalMinutes: number) => {
   return {
+    timeFrame: timeFrame,
     startTime: Date.now(),
     resetInterval: resetIntervalMinutes * 1000,
 
@@ -54,7 +38,7 @@ export class Statistics {
 
   constructor(restaurant: Restaurant) {
     this.timeframes = new Map();
-    this.timeframes.set("daily", getInitVal(restaurant, 60 * 24));
+    this.timeframes.set("daily", getInitVal("daily",restaurant, 60 * 24));
 
     this.restaurant = restaurant;
   }

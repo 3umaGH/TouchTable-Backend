@@ -73,6 +73,14 @@ export class Restaurant extends EventEmitter {
     return this.logo;
   }
 
+  getName = () => {
+    return this.name;
+  }
+
+  getTables = () => {
+    return this.tables;
+  }
+
   getOrderByID = (id: number) => {
     const order = this.orders.find((order) => order.id == id);
 

@@ -319,7 +319,7 @@ export const mockDishes: Dish[] = [
       quantity: "stickman butt",
       ingredients: [{ name: "Stickman", removable: false }],
       options: [{ option: "Extra stickman butt", price: 0, enabled: true }],
-      available: true,
+      available: false,
     },
   },
 ];

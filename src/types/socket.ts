@@ -1,6 +1,7 @@
 import { Notification } from "./notification";
 import { Order, OrderItemStatus, OrderStatus } from "./order";
 import { RestaurantData } from "./restaurant";
+import { StatsKey } from "./statistics";
 
 export interface ServerToClientEvents {
   newNotification: (notification: Notification) => void;
@@ -67,6 +68,13 @@ export interface ClientToServerEvents {
   getRestaurantOrders: (
     id: number,
     callback: (e: Order[] | { error: boolean; message: string }) => void
+  ) => void;
+
+  getRestaurantStats: (
+    id: number,
+    callback: (
+      e: StatsKey[] | { error: boolean; message: string }
+    ) => void
   ) => void;
 
   getRestaurantNotifications: (

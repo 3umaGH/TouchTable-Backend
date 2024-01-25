@@ -2,10 +2,13 @@ import { Dish } from "./dish";
 import { ThemeProps } from "./theme";
 
 export type RestaurantData = {
+  name: string,
+  logo: string;
+  theme: ThemeProps;
   dishes: Dish[];
   categories: Category[];
-  theme: ThemeProps;
-  logo: string;
+
+  tables: Table[];
 };
 
 export type Table = {
