@@ -1,6 +1,11 @@
 import { restaurants } from ".";
 import { Restaurant } from "./restaurant/Restaurant";
-import { Order, OrderItemStatuses, OrderStatuses } from "./types/order";
+import {
+  Order,
+  OrderItem,
+  OrderItemStatuses,
+  OrderStatuses,
+} from "./types/order";
 import {} from "./types/restaurant";
 
 export const validateOrder = (restaurantID: number, order: Order): void => {
@@ -64,4 +69,56 @@ export const catchError = (
 ) => {
   if (err instanceof Error) callback({ error: true, message: err.message });
   else callback({ error: true, message: "Unknown Error" });
+};
+
+const calculateOrderItemTotal = (
+  restaurant: Restaurant,
+  orderItem: OrderItem
+) => {
+  const dishObj = restaurant.getDishByID(orderItem.dish.dishID);
+
+  if (orderItem.status === "CANCELLED" || !dishObj) {
+    return {
+      price: 0,
+      discount: 0,
+      extras: 0,
+      finalPrice: 0,
+    };
+  }
+
+  const price = dishObj.price * orderItem.amount;
+  const discount = dishObj.discount * orderItem.amount;
+
+  const extras = orderItem.dish.addedOptions.reduce(
+    (totalPrice, option) => (totalPrice = totalPrice + option.price),
+    0
+  );
+
+  const finalPrice = price + extras - discount;
+
+  return { price, discount, extras, finalPrice };
+};
+
+export const calculateOrderTotal = (restaurant: Restaurant, order: Order) => {
+  const itemPrices = order.items.map((item) =>
+    calculateOrderItemTotal(restaurant, item)
+  );
+
+  const accumulator = {
+    price: 0,
+    discount: 0,
+    extras: 0,
+    finalPrice: 0,
+  };
+
+  for (const item of itemPrices) {
+    accumulator.price += item.price || 0;
+    accumulator.discount += item.discount || 0;
+    accumulator.extras += item.extras || 0;
+  }
+
+  accumulator.finalPrice =
+    accumulator.price + accumulator.extras - accumulator.discount;
+
+  return accumulator;
 };

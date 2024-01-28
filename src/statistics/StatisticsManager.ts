@@ -25,6 +25,13 @@ export class StatisticsManager {
     this.aggregator.on("assistanceRequest", (restaurantID) => {
       this.restaurants.get(restaurantID)?.onAssistanceRequest();
     });
+
+    this.aggregator.on(
+      "checkRequest",
+      (restaurantID, paymentBy: "cash" | "card") => {
+        this.restaurants.get(restaurantID)?.onCheckRequest(paymentBy);
+      }
+    );
   };
 
   getStatistics = (restaurantID: number) => {

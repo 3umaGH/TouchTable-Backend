@@ -1,3 +1,4 @@
+import { Dish } from "./dish";
 import { Notification } from "./notification";
 import { Order, OrderItemStatus, OrderStatus } from "./order";
 import { RestaurantData } from "./restaurant";
@@ -11,12 +12,19 @@ export interface ServerToClientEvents {
   orderUpdate: (order: Order) => void;
 
   tableSessionClear: () => void;
+  restaurantDataUpdated: () => void;
 }
 
 export interface ClientToServerEvents {
   joinRoom: (
     restaurantID: number,
     room: "waiters" | "kitchen" | string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  updateDish: (
+    restaurantID: number,
+    dish: Dish,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
@@ -72,9 +80,7 @@ export interface ClientToServerEvents {
 
   getRestaurantStats: (
     id: number,
-    callback: (
-      e: StatsKey[] | { error: boolean; message: string }
-    ) => void
+    callback: (e: StatsKey[] | { error: boolean; message: string }) => void
   ) => void;
 
   getRestaurantNotifications: (

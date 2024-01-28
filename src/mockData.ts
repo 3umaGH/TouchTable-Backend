@@ -64,7 +64,7 @@ export const mockDishes: Dish[] = [
         { option: "Garlic Infusion", price: 1.5, enabled: true },
         { option: "Cheese Topping", price: 1.25, enabled: true },
       ],
-      available: true,
+      available: false,
     },
   },
   {
@@ -117,7 +117,7 @@ export const mockDishes: Dish[] = [
         { option: "Avocado", price: 1.5, enabled: true },
         { option: "Crispy Bacon", price: 2.0, enabled: true },
       ],
-      available: true,
+      available: false,
     },
   },
   {
@@ -159,7 +159,7 @@ export const mockDishes: Dish[] = [
     params: {
       title: "Salmon Poke Bowl",
       description:
-        "Enjoy a delicious Salmon Poke Bowl, a refreshing combination of fresh salmon, rice, creamy avocado, black beans, and a medley of vibrant flavors. Customize your bowl with additional options to enhance your culinary experience.",
+        "Enjoy a delicious Salmon Poke Bowl, a refreshing combination of fresh salmon, rice, creamy avocado, black beans, and a medley of vibrant flavors. Customize your bowl with additional options to enhance your culinary experience. ",
       quantity: "1 bowl",
       ingredients: [
         { name: "Fresh Salmon", removable: false },
@@ -238,7 +238,7 @@ export const mockDishes: Dish[] = [
     price: 14.99,
     discount: 0,
     params: {
-      title: "Beef Poke Bowl with an egg and",
+      title: "Bytufiop yhggdtf yhfuripo ofirndhfur yuryfhgstuomhf yutspasd",
       description:
         "Enjoy a flavorful poke bowl featuring tender beef, eggs, carrots, wakame seaweed, and rice. This delicious bowl is a perfect blend of protein, vegetables, and grains, providing a satisfying and nutritious meal.",
       quantity: "1 bowl",
@@ -258,91 +258,40 @@ export const mockDishes: Dish[] = [
     },
   },
 
-  {
-    id: 10,
-    categoryId: 1,
-    image:
-      "https://cdn.drawception.com/images/panels/2016/8-1/WeF3SSAbxq-3.png",
-    price: 1337.99,
-    discount: 0,
-    params: {
-      title: "Nichego tut netu",
-      description: "Nu prjam voobshe nichego",
-      quantity: "stickman butt",
-      ingredients: [{ name: "Stickman", removable: false }],
-      options: [{ option: "Extra stickman butt", price: 0, enabled: true }],
-      available: true,
-    },
-  },
-  {
-    id: 11,
-    categoryId: 2,
-    image:
-      "https://cdn.drawception.com/images/panels/2016/8-1/WeF3SSAbxq-3.png",
-    price: 1337.99,
-    discount: 0,
-    params: {
-      title: "Nichego tut netu",
-      description: "Nu prjam voobshe nichego",
-      quantity: "stickman butt",
-      ingredients: [{ name: "Stickman", removable: false }],
-      options: [{ option: "Extra stickman butt", price: 0, enabled: true }],
-      available: true,
-    },
-  },
-  {
-    id: 12,
-    categoryId: 3,
-    image:
-      "https://cdn.drawception.com/images/panels/2016/8-1/WeF3SSAbxq-3.png",
-    price: 1337.99,
-    discount: 0,
-    params: {
-      title: "Nichego tut netu",
-      description: "Nu prjam voobshe nichego",
-      quantity: "stickman butt",
-      ingredients: [{ name: "Stickman", removable: false }],
-      options: [{ option: "Extra stickman butt", price: 0, enabled: true }],
-      available: true,
-    },
-  },
-  {
-    id: 13,
-    categoryId: 4,
-    image:
-      "https://cdn.drawception.com/images/panels/2016/8-1/WeF3SSAbxq-3.png",
-    price: 1337.99,
-    discount: 0,
-    params: {
-      title: "Nichego tut netu",
-      description: "Nu prjam voobshe nichego",
-      quantity: "stickman butt",
-      ingredients: [{ name: "Stickman", removable: false }],
-      options: [{ option: "Extra stickman butt", price: 0, enabled: true }],
-      available: false,
-    },
-  },
+
 ];
 
 export const mockCategories: Category[] = [
   {
     id: 0,
-    title: "Pizza",
+    title: "Appetizers",
   },
   {
     id: 1,
-    title: "Pasta",
+    title: "Main Courses",
   },
   {
     id: 2,
-    title: "Sushi",
+    title: "Pizzas",
   },
   {
     id: 3,
-    title: "Drinks",
+    title: "Pasta Dishes",
   },
   {
     id: 4,
-    title: "Ramen",
+    title: "Salads",
   },
+  {
+    id: 5,
+    title: "Desserts",
+  },
+  {
+    id: 6,
+    title: "Drinks",
+  },
+  {
+    id: 7,
+    title: "Specials",
+  }
 ];

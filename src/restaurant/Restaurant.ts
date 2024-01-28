@@ -71,18 +71,26 @@ export class Restaurant extends EventEmitter {
 
   getLogo = () => {
     return this.logo;
-  }
+  };
 
   getName = () => {
     return this.name;
-  }
+  };
 
   getTables = () => {
     return this.tables;
-  }
+  };
+
+  getDishByID = (id: number) => {
+    const dish = this.dishes.find((dish) => dish.id === id);
+
+    if (!dish) throw new Error("Invalid Dish ID");
+
+    return dish;
+  };
 
   getOrderByID = (id: number) => {
-    const order = this.orders.find((order) => order.id == id);
+    const order = this.orders.find((order) => order.id === id);
 
     if (!order) throw new Error("Invalid order ID");
 
@@ -264,5 +272,14 @@ export class Restaurant extends EventEmitter {
     });
 
     this.emit("finishedOrCancelledOrder", order);
+  };
+
+  updateDish = (newDish: Dish) => {
+    const prevDishID = this.dishes.findIndex((dish) => dish.id === newDish.id);
+
+    if (prevDishID === -1) throw new Error("Invalid dish id.");
+
+    this.dishes[prevDishID] = newDish;
+    this.emit("restaurantDataUpdated");
   };
 }

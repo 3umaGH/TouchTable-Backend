@@ -90,6 +90,8 @@ export class RestaurantAggregator extends EventEmitter {
             orderID: originOrders.map((order) => order.id as number),
             paymentBy: paymentBy,
           });
+
+          this.emit("checkRequest", restaurant.id, paymentBy);
         }
       );
 
@@ -99,6 +101,10 @@ export class RestaurantAggregator extends EventEmitter {
 
       restaurant.on("finishedOrCancelledOrder", (order: Order) => {
         this.emit("finishedOrCancelledOrder", restaurant.id, order);
+      });
+
+      restaurant.on("restaurantDataUpdated", () => {
+        this.emit("restaurantDataUpdated", restaurant.id);
       });
     });
   };

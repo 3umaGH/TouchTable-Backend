@@ -1,6 +1,7 @@
 export type StatsKey = {
   timeFrame: string;
   startTime: number;
+  resetInterval: number;
 
   orders: {
     finished: number;
@@ -13,6 +14,11 @@ export type StatsKey = {
 
   notifications: {
     assistanceRequests: number;
+  };
+
+  checks: {
+    card: number;
+    cash: number;
   };
 
   dishes: Record<string, number>;

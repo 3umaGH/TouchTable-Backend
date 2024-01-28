@@ -55,6 +55,7 @@ export class SocketManager {
           .to(`${restaurantID}_waiters`)
           .to(`${restaurantID}_kitchen`)
           .to(`${restaurantID}_table_${order.origin}`)
+          .to(`${restaurantID}_admin`)
           .emit("newOrderCreated", order);
       });
 
@@ -63,6 +64,7 @@ export class SocketManager {
           .to(`${restaurantID}_waiters`)
           .to(`${restaurantID}_kitchen`)
           .to(`${restaurantID}_table_${order.origin}`)
+          .to(`${restaurantID}_admin`)
           .emit("orderUpdate", order);
       });
 
@@ -73,6 +75,7 @@ export class SocketManager {
             .to(`${restaurantID}_waiters`)
             .to(`${restaurantID}_kitchen`)
             .to(`${restaurantID}_table_${order.origin}`)
+            .to(`${restaurantID}_admin`)
             .emit("orderUpdate", order);
         }
       );
@@ -91,9 +94,14 @@ export class SocketManager {
         (restaurantID, order: Order) => {
           this.io
             .to(`${restaurantID}_table_${order.origin}`)
+            .to(`${restaurantID}_admin`)
             .emit("tableSessionClear");
         }
       );
+
+      this.aggregator.on("restaurantDataUpdated", (restaurantID: number) => {
+        this.io.emit("restaurantDataUpdated");
+      });
     };
 
     const socketEvents = () => {
@@ -149,6 +157,17 @@ export class SocketManager {
               ?.timeframes.values();
 
             callback([...statistics]);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("updateDish", (restaurantID, dish, callback) => {
+          try {
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            restaurant.updateDish(dish);
+            callback(true);
           } catch (err) {
             catchError(err, callback);
           }
