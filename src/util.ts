@@ -1,5 +1,6 @@
 import { restaurants } from ".";
 import { Restaurant } from "./restaurant/Restaurant";
+import { DishOption } from "./types/dish";
 import {
   Order,
   OrderItem,
@@ -71,7 +72,7 @@ export const catchError = (
   else callback({ error: true, message: "Unknown Error" });
 };
 
-const calculateOrderItemTotal = (
+export const calculateOrderItemTotal = (
   restaurant: Restaurant,
   orderItem: OrderItem
 ) => {
@@ -89,10 +90,16 @@ const calculateOrderItemTotal = (
   const price = dishObj.price * orderItem.amount;
   const discount = dishObj.discount * orderItem.amount;
 
-  const extras = orderItem.dish.addedOptions.reduce(
-    (totalPrice, option) => (totalPrice = totalPrice + option.price),
-    0
-  );
+  const getOptionPrice = (option: DishOption, dishOptions: DishOption[]) => {
+    const dishOption = dishOptions.find((opt) => opt.option === option.option);
+    return dishOption ? dishOption.price || 0 : 0;
+  };
+
+  const extras = dishObj
+    ? orderItem.dish.addedOptions.reduce((totalPrice, option) => {
+        return totalPrice + getOptionPrice(option, dishObj.params.options);
+      }, 0)
+    : 0;
 
   const finalPrice = price + extras - discount;
 

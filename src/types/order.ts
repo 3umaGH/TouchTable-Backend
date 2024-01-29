@@ -8,6 +8,13 @@ export type Order = {
 
   items: OrderItem[];
   note: string;
+
+  price: {
+    price: number,
+    discount: number,
+    extras: number,
+    finalPrice: number,
+  } | null;
 };
 
 export const OrderStatuses = {
@@ -24,6 +31,13 @@ export type OrderItem = {
   dish: CustomizedDish;
   amount: number;
   status: OrderItemStatus;
+
+  price: {
+    price: number,
+    discount: number,
+    extras: number,
+    finalPrice: number,
+  } | null;
 };
 
 export const OrderItemStatuses = {

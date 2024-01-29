@@ -1,5 +1,5 @@
 import { Category, Table } from "../types/restaurant";
-import { validateOrder } from "../util";
+import { calculateOrderItemTotal, calculateOrderTotal, validateOrder } from "../util";
 import { v4 as uuidv4 } from "uuid";
 import EventEmitter from "events";
 import { Dish } from "../types/dish";
@@ -149,7 +149,10 @@ export class Restaurant extends EventEmitter {
     order.items = order.items.map((orderItem) => ({
       ...orderItem,
       id: uuidv4(),
+      price: calculateOrderItemTotal(this, orderItem)
     }));
+
+    order.price = calculateOrderTotal(this, order);
 
     table.activeOrders = [...table.activeOrders, order.id];
     this.orders.push(order);

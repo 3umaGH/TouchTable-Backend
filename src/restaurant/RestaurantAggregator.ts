@@ -3,6 +3,7 @@ import { Restaurant } from "./Restaurant";
 import { Order, OrderItem, OrderItemStatus, OrderStatus } from "../types/order";
 import { Notification, NotificationType } from "../types/notification";
 import { v4 as uuidv4 } from "uuid";
+import { calculateOrderItemTotal, calculateOrderTotal } from "../util";
 
 export class RestaurantAggregator extends EventEmitter {
   restaurants: Restaurant[];
@@ -67,6 +68,10 @@ export class RestaurantAggregator extends EventEmitter {
               "ORDER_ITEM_CANCELLED",
               { orderID: [order.id!], orderItemID: orderItem.id }
             );
+
+            /* Recalculate order price on item cancellation */
+            order.price = calculateOrderTotal(restaurant, order);
+            orderItem.price = calculateOrderItemTotal(restaurant, orderItem);
           }
 
           this.emit("orderItemStatusUpdate", restaurant.id, order, orderItem);
