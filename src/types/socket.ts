@@ -1,4 +1,4 @@
-import { Dish } from "./dish";
+import { Dish, UnverifiedDish } from "./dish";
 import { Notification } from "./notification";
 import { Order, OrderItemStatus, OrderStatus } from "./order";
 import { RestaurantData } from "./restaurant";
@@ -25,6 +25,12 @@ export interface ClientToServerEvents {
   updateDish: (
     restaurantID: number,
     dish: Dish,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  createDish: (
+    restaurantID: number,
+    dish: UnverifiedDish,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 

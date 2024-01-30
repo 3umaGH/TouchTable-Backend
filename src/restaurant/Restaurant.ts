@@ -1,8 +1,12 @@
 import { Category, Table } from "../types/restaurant";
-import { calculateOrderItemTotal, calculateOrderTotal, validateOrder } from "../util";
+import {
+  calculateOrderItemTotal,
+  calculateOrderTotal,
+  validateOrder,
+} from "../util";
 import { v4 as uuidv4 } from "uuid";
 import EventEmitter from "events";
-import { Dish } from "../types/dish";
+import { Dish, UnverifiedDish } from "../types/dish";
 import {
   Order,
   OrderItemStatus,
@@ -149,7 +153,7 @@ export class Restaurant extends EventEmitter {
     order.items = order.items.map((orderItem) => ({
       ...orderItem,
       id: uuidv4(),
-      price: calculateOrderItemTotal(this, orderItem)
+      price: calculateOrderItemTotal(this, orderItem),
     }));
 
     order.price = calculateOrderTotal(this, order);
@@ -282,7 +286,21 @@ export class Restaurant extends EventEmitter {
 
     if (prevDishID === -1) throw new Error("Invalid dish id.");
 
+    /*TODO: IMPLEMENT VALIDATION*/
+
     this.dishes[prevDishID] = newDish;
+    this.emit("restaurantDataUpdated");
+  };
+
+  createDish = (newDish: UnverifiedDish) => {
+    /*TODO: IMPLEMENT VALIDATION*/
+
+    newDish.id =
+      this.dishes.reduce((maxId, dish) => Math.max(dish.id ?? 0, maxId), -1) +
+      1;
+
+    this.dishes.push(newDish as Dish);
+
     this.emit("restaurantDataUpdated");
   };
 }

@@ -173,6 +173,17 @@ export class SocketManager {
           }
         });
 
+        socket.on("createDish", (restaurantID, dish, callback) => {
+          try {
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            restaurant.createDish(dish);
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
         socket.on(
           "updateOrderStatus",
           (restaurantID, id, newStatus, callback) => {

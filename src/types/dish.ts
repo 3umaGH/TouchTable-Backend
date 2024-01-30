@@ -26,3 +26,7 @@ export type Dish = {
     available: boolean;
   };
 };
+
+export type UnverifiedDish = Omit<Dish, "id"> & {
+  id: number | null;
+};
