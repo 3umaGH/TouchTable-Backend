@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 export const ingredientSchema = Joi.object({
   name: Joi.string().max(50).required(),
@@ -27,4 +27,6 @@ export const dishSchema = Joi.object({
   }).required(),
 });
 
-export const unverifiedDishSchema = dishSchema.fork(['id'], (schema) => schema.allow(null));
+export const unverifiedDishSchema = dishSchema.fork(["id"], (schema) =>
+  schema.allow(null)
+);

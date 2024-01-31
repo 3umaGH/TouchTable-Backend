@@ -9,13 +9,16 @@ import { catchError } from "../util";
 import { Order, OrderItem } from "../types/order";
 import { Notification } from "../types/notification";
 import { StatisticsManager } from "../statistics/StatisticsManager";
-import { StatsKey } from "../types/statistics";
 import { dishSchema, unverifiedDishSchema } from "../validation/dishValidation";
 import {
   categorySchema,
   unverifiedCategorySchema,
 } from "../validation/categoryValidation";
-import { orderItemStatusSchema, orderSchema, orderStatusSchema } from "../validation/orderValidation";
+import {
+  orderItemStatusSchema,
+  orderSchema,
+  orderStatusSchema,
+} from "../validation/orderValidation";
 
 export class SocketManager {
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents>;

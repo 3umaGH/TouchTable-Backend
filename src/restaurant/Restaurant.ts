@@ -16,11 +16,6 @@ import {
 } from "../types/order";
 import { Notification } from "../types/notification";
 import { ThemeProps } from "../types/theme";
-import { dishSchema, unverifiedDishSchema } from "../validation/dishValidation";
-import {
-  categorySchema,
-  unverifiedCategorySchema,
-} from "../validation/categoryValidation";
 
 export class Restaurant extends EventEmitter {
   id: number;

@@ -257,8 +257,6 @@ export const mockDishes: Dish[] = [
       available: true,
     },
   },
-
-
 ];
 
 export const mockCategories: Category[] = [
@@ -293,5 +291,5 @@ export const mockCategories: Category[] = [
   {
     id: 7,
     title: "Specials",
-  }
+  },
 ];

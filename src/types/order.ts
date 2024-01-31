@@ -10,10 +10,10 @@ export type Order = {
   note: string;
 
   price: {
-    price: number,
-    discount: number,
-    extras: number,
-    finalPrice: number,
+    price: number;
+    discount: number;
+    extras: number;
+    finalPrice: number;
   } | null;
 };
 
@@ -33,10 +33,10 @@ export type OrderItem = {
   status: OrderItemStatus;
 
   price: {
-    price: number,
-    discount: number,
-    extras: number,
-    finalPrice: number,
+    price: number;
+    discount: number;
+    extras: number;
+    finalPrice: number;
   } | null;
 };
 

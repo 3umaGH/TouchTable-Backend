@@ -25,7 +25,9 @@ export const orderItemSchema = Joi.object({
   }).allow(null),
 });
 
-export const orderStatusSchema = Joi.string().valid(...Object.keys(OrderStatuses));
+export const orderStatusSchema = Joi.string().valid(
+  ...Object.keys(OrderStatuses)
+);
 
 export const orderSchema = Joi.object({
   id: Joi.number().allow(null),
@@ -33,7 +35,7 @@ export const orderSchema = Joi.object({
   origin: Joi.number().required(),
   status: orderStatusSchema.required(),
   items: Joi.array().items(orderItemSchema).required(),
-  note: Joi.string().max(150).allow('').required(),
+  note: Joi.string().max(150).allow("").required(),
   price: Joi.object({
     price: Joi.number(),
     discount: Joi.number(),
