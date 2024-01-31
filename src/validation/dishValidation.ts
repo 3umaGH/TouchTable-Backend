@@ -27,6 +27,6 @@ export const dishSchema = Joi.object({
   }).required(),
 });
 
-export const unverifiedDishSchema = dishSchema.fork(["id"], (schema) =>
+export const DraftDishSchema = dishSchema.fork(["id"], (schema) =>
   schema.allow(null)
 );

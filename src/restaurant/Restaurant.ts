@@ -1,4 +1,4 @@
-import { Category, Table, UnverifiedCategory } from "../types/restaurant";
+import { Category, Table, DraftCategory } from "../types/restaurant";
 import {
   calculateOrderItemTotal,
   calculateOrderTotal,
@@ -6,7 +6,7 @@ import {
 } from "../util";
 import { v4 as uuidv4 } from "uuid";
 import EventEmitter from "events";
-import { Dish, UnverifiedDish } from "../types/dish";
+import { Dish, DraftDish } from "../types/dish";
 import {
   Order,
   OrderItemStatus,
@@ -296,7 +296,7 @@ export class Restaurant extends EventEmitter {
     this.emit("restaurantDataUpdated");
   };
 
-  createCategory = (category: UnverifiedCategory) => {
+  createCategory = (category: DraftCategory) => {
     if (this.categories.find((cat) => cat.title === category.title))
       throw new Error("Category with this title already exists");
 
@@ -339,7 +339,7 @@ export class Restaurant extends EventEmitter {
     this.emit("restaurantDataUpdated");
   };
 
-  createDish = (newDish: UnverifiedDish) => {
+  createDish = (newDish: DraftDish) => {
     if (newDish.discount > newDish.price)
       throw new Error("Discount cannot be bigger than item price");
 

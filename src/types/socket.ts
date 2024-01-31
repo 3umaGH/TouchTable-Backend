@@ -1,7 +1,7 @@
-import { Dish, UnverifiedDish } from "./dish";
+import { Dish, DraftDish } from "./dish";
 import { Notification } from "./notification";
 import { Order, OrderItemStatus, OrderStatus } from "./order";
-import { Category, RestaurantData, UnverifiedCategory } from "./restaurant";
+import { Category, RestaurantData, DraftCategory } from "./restaurant";
 import { StatsKey } from "./statistics";
 
 export interface ServerToClientEvents {
@@ -24,7 +24,7 @@ export interface ClientToServerEvents {
 
   createCategory: (
     restaurantID: number,
-    category: UnverifiedCategory,
+    category: DraftCategory,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
@@ -48,7 +48,7 @@ export interface ClientToServerEvents {
 
   createDish: (
     restaurantID: number,
-    dish: UnverifiedDish,
+    dish: DraftDish,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 

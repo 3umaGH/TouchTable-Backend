@@ -27,6 +27,6 @@ export type Dish = {
   };
 };
 
-export type UnverifiedDish = Omit<Dish, "id"> & {
+export type DraftDish = Omit<Dish, "id"> & {
   id: number | null;
 };

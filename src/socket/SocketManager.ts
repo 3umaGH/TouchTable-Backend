@@ -9,10 +9,10 @@ import { catchError } from "../util";
 import { Order, OrderItem } from "../types/order";
 import { Notification } from "../types/notification";
 import { StatisticsManager } from "../statistics/StatisticsManager";
-import { dishSchema, unverifiedDishSchema } from "../validation/dishValidation";
+import { dishSchema, DraftDishSchema } from "../validation/dishValidation";
 import {
   categorySchema,
-  unverifiedCategorySchema,
+  DraftCategorySchema,
 } from "../validation/categoryValidation";
 import {
   orderItemStatusSchema,
@@ -187,7 +187,7 @@ export class SocketManager {
 
         socket.on("createDish", (restaurantID, dish, callback) => {
           try {
-            const { error } = unverifiedDishSchema.validate(dish);
+            const { error } = DraftDishSchema.validate(dish);
             if (error) throw new Error(error.message);
 
             const restaurant = this.getRestaurantById(restaurantID);
@@ -309,7 +309,7 @@ export class SocketManager {
 
         socket.on("createCategory", (restaurantID, category, callback) => {
           try {
-            const { error } = unverifiedCategorySchema.validate(category);
+            const { error } = DraftCategorySchema.validate(category);
             if (error) throw new Error(error.message);
 
             const restaurant = this.getRestaurantById(restaurantID);

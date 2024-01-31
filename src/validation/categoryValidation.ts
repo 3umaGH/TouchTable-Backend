@@ -5,6 +5,6 @@ export const categorySchema = Joi.object({
   title: Joi.string().max(30).required(),
 });
 
-export const unverifiedCategorySchema = categorySchema.fork(["id"], (schema) =>
+export const DraftCategorySchema = categorySchema.fork(["id"], (schema) =>
   schema.allow(null)
 );

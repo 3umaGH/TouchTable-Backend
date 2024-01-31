@@ -21,6 +21,6 @@ export type Category = {
   title: string;
 };
 
-export type UnverifiedCategory = Omit<Category, "id"> & {
+export type DraftCategory = Omit<Category, "id"> & {
   id: null;
 };
