@@ -16,6 +16,11 @@ import {
 } from "../types/order";
 import { Notification } from "../types/notification";
 import { ThemeProps } from "../types/theme";
+import { dishSchema, unverifiedDishSchema } from "../validation/dishValidation";
+import {
+  categorySchema,
+  unverifiedCategorySchema,
+} from "../validation/categoryValidation";
 
 export class Restaurant extends EventEmitter {
   id: number;
@@ -300,9 +305,6 @@ export class Restaurant extends EventEmitter {
     if (this.categories.find((cat) => cat.title === category.title))
       throw new Error("Category with this title already exists");
 
-    if (category.title.length > 30)
-      throw new Error("Title cannot be longer than 30 characters");
-
     const newID =
       this.categories.reduce((maxId, cat) => Math.max(cat.id ?? 0, maxId), -1) +
       1;
@@ -333,23 +335,18 @@ export class Restaurant extends EventEmitter {
   updateDish = (newDish: Dish) => {
     const prevDishID = this.dishes.findIndex((dish) => dish.id === newDish.id);
 
-    if (prevDishID === -1) throw new Error("Invalid dish id");
+    if (prevDishID === -1) throw new Error("Invalid dish ID");
 
-    /*TODO: IMPLEMENT VALIDATION*/
+    if (newDish.discount > newDish.price)
+      throw new Error("Discount cannot be bigger than item price");
 
     this.dishes[prevDishID] = newDish;
     this.emit("restaurantDataUpdated");
   };
 
   createDish = (newDish: UnverifiedDish) => {
-    /*TODO: IMPLEMENT VALIDATION*/
-
-    if(newDish.params.title.length > 60)
-    throw new Error("Title cannot be longer than 60 characters")
-
-    if(newDish.params.title)
-    throw new Error("Title cannot be longer than 60 characters")
-
+    if (newDish.discount > newDish.price)
+      throw new Error("Discount cannot be bigger than item price");
 
     newDish.id =
       this.dishes.reduce((maxId, dish) => Math.max(dish.id ?? 0, maxId), -1) +

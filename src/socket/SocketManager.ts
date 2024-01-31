@@ -10,6 +10,12 @@ import { Order, OrderItem } from "../types/order";
 import { Notification } from "../types/notification";
 import { StatisticsManager } from "../statistics/StatisticsManager";
 import { StatsKey } from "../types/statistics";
+import { dishSchema, unverifiedDishSchema } from "../validation/dishValidation";
+import {
+  categorySchema,
+  unverifiedCategorySchema,
+} from "../validation/categoryValidation";
+import { orderItemStatusSchema, orderSchema, orderStatusSchema } from "../validation/orderValidation";
 
 export class SocketManager {
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents>;
@@ -164,6 +170,9 @@ export class SocketManager {
 
         socket.on("updateDish", (restaurantID, dish, callback) => {
           try {
+            const { error } = dishSchema.validate(dish);
+            if (error) throw new Error(error.message);
+
             const restaurant = this.getRestaurantById(restaurantID);
 
             restaurant.updateDish(dish);
@@ -175,6 +184,9 @@ export class SocketManager {
 
         socket.on("createDish", (restaurantID, dish, callback) => {
           try {
+            const { error } = unverifiedDishSchema.validate(dish);
+            if (error) throw new Error(error.message);
+
             const restaurant = this.getRestaurantById(restaurantID);
 
             restaurant.createDish(dish);
@@ -188,6 +200,9 @@ export class SocketManager {
           "updateOrderStatus",
           (restaurantID, id, newStatus, callback) => {
             try {
+              const { error } = orderStatusSchema.validate(newStatus);
+              if (error) throw new Error(error.message);
+
               const restaurant = this.getRestaurantById(restaurantID);
 
               restaurant.updateOrderStatus(id, newStatus);
@@ -202,6 +217,9 @@ export class SocketManager {
           "updateOrderItemStatus",
           (restaurantID, orderID, orderItemID, newStatus, callback) => {
             try {
+              const { error } = orderItemStatusSchema.validate(newStatus);
+              if (error) throw new Error(error.message);
+
               const restaurant = this.getRestaurantById(restaurantID);
               const order = restaurant.getOrderByID(orderID);
 
@@ -215,6 +233,9 @@ export class SocketManager {
 
         socket.on("createOrder", (restaurantID, order, callback) => {
           try {
+            const { error } = orderSchema.validate(order);
+            if (error) throw new Error(error.message);
+
             const restaurant = this.getRestaurantById(restaurantID);
             const assignedOrder = restaurant.createOrder(order);
 
@@ -285,6 +306,9 @@ export class SocketManager {
 
         socket.on("createCategory", (restaurantID, category, callback) => {
           try {
+            const { error } = unverifiedCategorySchema.validate(category);
+            if (error) throw new Error(error.message);
+
             const restaurant = this.getRestaurantById(restaurantID);
 
             restaurant.createCategory(category);
@@ -296,6 +320,9 @@ export class SocketManager {
 
         socket.on("updateCategory", (restaurantID, category, callback) => {
           try {
+            const { error } = categorySchema.validate(category);
+            if (error) throw new Error(error.message);
+
             const restaurant = this.getRestaurantById(restaurantID);
 
             restaurant.updateCategory(category);
@@ -307,6 +334,9 @@ export class SocketManager {
 
         socket.on("deleteCategory", (restaurantID, category, callback) => {
           try {
+            const { error } = categorySchema.validate(category);
+            if (error) throw new Error(error.message);
+
             const restaurant = this.getRestaurantById(restaurantID);
 
             restaurant.deleteCategory(category);
