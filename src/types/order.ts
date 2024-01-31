@@ -1,8 +1,8 @@
 import { DishOption, Ingredient } from "./dish";
 
 export type Order = {
-  id: number | null;
-  time: number | null;
+  id: number;
+  time: number;
   origin: number;
   status: OrderStatus;
 
@@ -15,6 +15,12 @@ export type Order = {
     extras: number;
     finalPrice: number;
   } | null;
+};
+
+export type DraftOrder = Omit<Order, "id" | "time" | "origin"> & {
+  id: null;
+  origin: number;
+  time: null;
 };
 
 export const OrderStatuses = {

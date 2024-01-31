@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import EventEmitter from "events";
 import { Dish, DraftDish } from "../types/dish";
 import {
+  DraftOrder,
   Order,
   OrderItemStatus,
   OrderItemStatuses,
@@ -116,7 +117,7 @@ export class Restaurant extends EventEmitter {
     }
   };
 
-  createOrder = (order: Order) => {
+  createOrder = (order: DraftOrder) => {
     const table = this.tables.find((table) => table.id === order.origin);
 
     if (order.items.length === 0)
@@ -145,26 +146,31 @@ export class Restaurant extends EventEmitter {
 
     validateOrder(this.id, order);
 
-    order.id =
-      this.orders.reduce((maxId, order) => Math.max(order.id ?? 0, maxId), -1) +
-      1;
-    order.time = Date.now();
-    order.status = "ORDER_RECEIVED";
-    order.items = order.items.map((orderItem) => ({
-      ...orderItem,
-      id: uuidv4(),
-      price: calculateOrderItemTotal(this, orderItem),
-    }));
+    const assignedOrder = {
+      ...order,
+      id:
+        this.orders.reduce(
+          (maxId, order) => Math.max(order.id ?? 0, maxId),
+          -1
+        ) + 1,
+      time: Date.now(),
+      status: "ORDER_RECEIVED",
+      items: order.items.map((orderItem) => ({
+        ...orderItem,
+        id: uuidv4(),
+        price: calculateOrderItemTotal(this, orderItem),
+      })),
 
-    order.price = calculateOrderTotal(this, order);
+      price: calculateOrderTotal(this, order),
+    } as Order;
 
-    table.activeOrders = [...table.activeOrders, order.id];
-    this.orders.push(order);
+    table.activeOrders = [...table.activeOrders, assignedOrder.id];
+    this.orders.push(assignedOrder);
 
-    this.emit("newOrder", order);
+    this.emit("newOrder", assignedOrder);
 
     console.log(`[${this.id}] Create Order ${order.id}`);
-    return order;
+    return assignedOrder;
   };
 
   updateOrderStatus = (id: number, newStatus: string) => {

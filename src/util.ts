@@ -2,6 +2,7 @@ import { restaurants } from ".";
 import { Restaurant } from "./restaurant/Restaurant";
 import { DishOption } from "./types/dish";
 import {
+  DraftOrder,
   Order,
   OrderItem,
   OrderItemStatuses,
@@ -9,7 +10,10 @@ import {
 } from "./types/order";
 import {} from "./types/restaurant";
 
-export const validateOrder = (restaurantID: number, order: Order): void => {
+export const validateOrder = (
+  restaurantID: number,
+  order: DraftOrder
+): void => {
   const restaurant = restaurants.get(restaurantID) as Restaurant;
   if (!restaurant) throw new Error("Invalid restaurant ID");
 
@@ -106,7 +110,10 @@ export const calculateOrderItemTotal = (
   return { price, discount, extras, finalPrice };
 };
 
-export const calculateOrderTotal = (restaurant: Restaurant, order: Order) => {
+export const calculateOrderTotal = (
+  restaurant: Restaurant,
+  order: Order | DraftOrder
+) => {
   const itemPrices = order.items.map((item) =>
     calculateOrderItemTotal(restaurant, item)
   );

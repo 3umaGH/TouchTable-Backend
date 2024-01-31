@@ -1,6 +1,6 @@
 import { Dish, DraftDish } from "./dish";
 import { Notification } from "./notification";
-import { Order, OrderItemStatus, OrderStatus } from "./order";
+import { DraftOrder, Order, OrderItemStatus, OrderStatus } from "./order";
 import { Category, RestaurantData, DraftCategory } from "./restaurant";
 import { StatsKey } from "./statistics";
 
@@ -54,7 +54,7 @@ export interface ClientToServerEvents {
 
   createOrder: (
     restaurantID: number,
-    order: Order,
+    order: DraftOrder,
     callback: (e: Order | { error: boolean; message: string }) => void
   ) => void;
 
