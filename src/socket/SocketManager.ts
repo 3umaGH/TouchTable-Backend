@@ -109,7 +109,14 @@ export class SocketManager {
       );
 
       this.aggregator.on("restaurantDataUpdated", (restaurantID: number) => {
-        this.io.emit("restaurantDataUpdated");
+        this.io
+          .to(`${restaurantID}_users`)
+          .to(`${restaurantID}_waiters`)
+          .to(`${restaurantID}_kitchen`)
+          .to(`${restaurantID}_admin`)
+          .emit("restaurantDataUpdated");
+
+        console.log(`[${restaurantID}] Restaurant Data Updated.`);
       });
     };
 
@@ -121,6 +128,8 @@ export class SocketManager {
 
             socket.join(`${restaurantID}_${room}`);
             callback(true);
+
+            console.log(`[${restaurantID}] Client joined ${restaurantID}_${room} room.`)
           } catch (err) {
             catchError(err, callback);
           }
@@ -132,6 +141,8 @@ export class SocketManager {
             const notifications = restaurant.getNotifications();
 
             callback(notifications);
+
+            console.log(`[${restaurantID}] Retreive notifications.`)
           } catch (err) {
             catchError(err, callback);
           }
@@ -154,6 +165,8 @@ export class SocketManager {
             const orders = restaurant.getOrders();
 
             callback(orders);
+            console.log(`[${restaurantID}] Orders retreive.`)
+
           } catch (err) {
             catchError(err, callback);
           }
@@ -166,6 +179,8 @@ export class SocketManager {
               ?.timeframes.values();
 
             callback([...statistics]);
+            console.log(`[${restaurantID}] Stats retreive.`)
+
           } catch (err) {
             catchError(err, callback);
           }
@@ -272,6 +287,8 @@ export class SocketManager {
             };
 
             callback(response);
+            console.log(`[${restaurantID}] Retreive restaurant data.`)
+            
           } catch (err) {
             catchError(err, callback);
           }
