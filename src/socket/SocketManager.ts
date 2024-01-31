@@ -283,7 +283,38 @@ export class SocketManager {
           }
         );
 
-        socket.on("disconnect", (socket) => {});
+        socket.on("createCategory", (restaurantID, category, callback) => {
+          try {
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            restaurant.createCategory(category);
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("updateCategory", (restaurantID, category, callback) => {
+          try {
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            restaurant.updateCategory(category);
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("deleteCategory", (restaurantID, category, callback) => {
+          try {
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            restaurant.deleteCategory(category);
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
       });
     };
 

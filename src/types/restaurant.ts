@@ -2,7 +2,7 @@ import { Dish } from "./dish";
 import { ThemeProps } from "./theme";
 
 export type RestaurantData = {
-  name: string,
+  name: string;
   logo: string;
   theme: ThemeProps;
   dishes: Dish[];
@@ -19,4 +19,8 @@ export type Table = {
 export type Category = {
   id: number;
   title: string;
+};
+
+export type UnverifiedCategory = Omit<Category, "id"> & {
+  id: null;
 };

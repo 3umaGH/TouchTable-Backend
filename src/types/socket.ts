@@ -1,7 +1,7 @@
 import { Dish, UnverifiedDish } from "./dish";
 import { Notification } from "./notification";
 import { Order, OrderItemStatus, OrderStatus } from "./order";
-import { RestaurantData } from "./restaurant";
+import { Category, RestaurantData, UnverifiedCategory } from "./restaurant";
 import { StatsKey } from "./statistics";
 
 export interface ServerToClientEvents {
@@ -19,6 +19,24 @@ export interface ClientToServerEvents {
   joinRoom: (
     restaurantID: number,
     room: "waiters" | "kitchen" | string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  createCategory: (
+    restaurantID: number,
+    category: UnverifiedCategory,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  updateCategory: (
+    restaurantID: number,
+    category: Category,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  deleteCategory: (
+    restaurantID: number,
+    category: Category,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 

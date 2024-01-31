@@ -1,4 +1,4 @@
-import { Category, Table } from "../types/restaurant";
+import { Category, Table, UnverifiedCategory } from "../types/restaurant";
 import {
   calculateOrderItemTotal,
   calculateOrderTotal,
@@ -281,10 +281,59 @@ export class Restaurant extends EventEmitter {
     this.emit("finishedOrCancelledOrder", order);
   };
 
+  updateCategory = (category: Category) => {
+    const prevID = this.categories.findIndex((cat) => cat.id === category.id);
+
+    if (prevID === -1) throw new Error("Invalid ID");
+
+    if (this.categories.find((cat) => cat.title === category.title))
+      throw new Error("Category with this title already exists");
+
+    if (category.title.length > 30)
+      throw new Error("Title cannot be longer than 30 characters");
+
+    this.categories[prevID] = category;
+    this.emit("restaurantDataUpdated");
+  };
+
+  createCategory = (category: UnverifiedCategory) => {
+    if (this.categories.find((cat) => cat.title === category.title))
+      throw new Error("Category with this title already exists");
+
+    if (category.title.length > 30)
+      throw new Error("Title cannot be longer than 30 characters");
+
+    const newID =
+      this.categories.reduce((maxId, cat) => Math.max(cat.id ?? 0, maxId), -1) +
+      1;
+
+    this.categories.push({ id: newID, title: category.title });
+    this.emit("restaurantDataUpdated");
+  };
+
+  deleteCategory = (category: Category) => {
+    if (!this.categories.find((cat) => cat.id === category.id))
+      throw new Error("Invalid category");
+
+    this.categories = this.categories.filter((cat) => cat.id !== category.id);
+
+    /* Change category of dishes in that category */
+    this.dishes = this.dishes.map((dish) =>
+      dish.categoryId === category.id
+        ? {
+            ...dish,
+            categoryId: this.categories.length > 0 ? this.categories[0].id : 0,
+          }
+        : dish
+    );
+
+    this.emit("restaurantDataUpdated");
+  };
+
   updateDish = (newDish: Dish) => {
     const prevDishID = this.dishes.findIndex((dish) => dish.id === newDish.id);
 
-    if (prevDishID === -1) throw new Error("Invalid dish id.");
+    if (prevDishID === -1) throw new Error("Invalid dish id");
 
     /*TODO: IMPLEMENT VALIDATION*/
 
@@ -294,6 +343,13 @@ export class Restaurant extends EventEmitter {
 
   createDish = (newDish: UnverifiedDish) => {
     /*TODO: IMPLEMENT VALIDATION*/
+
+    if(newDish.params.title.length > 60)
+    throw new Error("Title cannot be longer than 60 characters")
+
+    if(newDish.params.title)
+    throw new Error("Title cannot be longer than 60 characters")
+
 
     newDish.id =
       this.dishes.reduce((maxId, dish) => Math.max(dish.id ?? 0, maxId), -1) +
