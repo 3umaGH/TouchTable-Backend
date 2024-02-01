@@ -1,18 +1,6 @@
 import { Dish } from "./types/dish";
 import { Category, Table } from "./types/restaurant";
 
-export const mockTables: Table[] = [
-  {
-    id: 0,
-    activeOrders: [],
-  },
-
-  {
-    id: 1,
-    activeOrders: [],
-  },
-];
-
 export const mockDishes: Dish[] = [
   {
     id: 1,
