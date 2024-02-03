@@ -3,6 +3,7 @@ import {
   ClientToServerEvents,
   InterServerEvents,
   ServerToClientEvents,
+  SocketData,
 } from "../types/socket";
 import { RestaurantAggregator } from "../restaurant/RestaurantAggregator";
 import { catchError } from "../util";
@@ -19,17 +20,25 @@ import {
   orderSchema,
   orderStatusSchema,
 } from "../validation/orderValidation";
+import { authMiddleware } from "./middleware/auth";
+import { hasRole, hasTablePermissions } from "./authorizationUtils";
+import { AuthenticationHandler } from "../authentication/AuthenticationHandler";
+import { authHandler } from "..";
+const jwt = require("jsonwebtoken");
 
 export class SocketManager {
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents>;
   aggregator: RestaurantAggregator;
   statistics: StatisticsManager;
 
+  tokenRefreshQueue: Map<string, string>;
+
   constructor(aggregator: RestaurantAggregator, statistics: StatisticsManager) {
     this.io = new Server<
       ClientToServerEvents,
       ServerToClientEvents,
-      InterServerEvents
+      InterServerEvents,
+      SocketData
     >({
       connectionStateRecovery: {},
       pingTimeout: 7000,
@@ -41,11 +50,20 @@ export class SocketManager {
 
     this.aggregator = aggregator;
     this.statistics = statistics;
+
+    this.tokenRefreshQueue = new Map();
   }
 
   startListening = (port: number) => {
     this.io.listen(port);
+
+    this.io.use(authMiddleware);
+
     console.log(`Listening on ${port} port.`);
+  };
+
+  pushTokenRefreshQueue = (id: string, access: string) => {
+    this.tokenRefreshQueue.set(id, access);
   };
 
   initalizeListeners = () => {
@@ -122,14 +140,45 @@ export class SocketManager {
 
     const socketEvents = () => {
       this.io.on("connection", (socket) => {
+        if (this.tokenRefreshQueue.has(socket.id)) {
+          socket.emit("tokenRefresh", {
+            access: this.tokenRefreshQueue.get(socket.id)!,
+          });
+
+          this.tokenRefreshQueue.delete(socket.id);
+        }
+
         socket.on("joinRoom", (restaurantID, room, callback) => {
           try {
+            let isAuthorized = true;
+
+            console.log(room);
+
+            if (room.includes("table_")) {
+              const tableID = parseInt(room.replace("table_", ""));
+
+              isAuthorized = hasTablePermissions(socket, tableID);
+            }
+
+            if (room === "users" && !hasRole(socket, restaurantID, "user"))
+              isAuthorized = false;
+
+            if (room === "waiters" && !hasRole(socket, restaurantID, "waiter"))
+              isAuthorized = false;
+
+            if (room === "admin" && !hasRole(socket, restaurantID, "admin"))
+              isAuthorized = false;
+
+            if (!isAuthorized) throw new Error("Permission Denied");
+
             const restaurant = this.getRestaurantById(restaurantID);
 
             socket.join(`${restaurantID}_${room}`);
             callback(true);
 
-            console.log(`[${restaurantID}] Client joined ${restaurantID}_${room} room.`)
+            console.log(
+              `[${restaurantID}] Client joined ${restaurantID}_${room} room.`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -137,12 +186,15 @@ export class SocketManager {
 
         socket.on("getRestaurantNotifications", (restaurantID, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "waiter"))
+              throw new Error("Permission Denied");
+
             const restaurant = this.getRestaurantById(restaurantID);
             const notifications = restaurant.getNotifications();
 
             callback(notifications);
 
-            console.log(`[${restaurantID}] Retreive notifications.`)
+            console.log(`[${restaurantID}] Retreive notifications.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -150,6 +202,9 @@ export class SocketManager {
 
         socket.on("setNotificationInactive", (restaurantID, id, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "waiter"))
+              throw new Error("Permission Denied");
+
             const restaurant = this.getRestaurantById(restaurantID);
             restaurant.setNotificationInactive(id);
 
@@ -161,12 +216,14 @@ export class SocketManager {
 
         socket.on("getRestaurantOrders", (restaurantID, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "waiter", "admin", "kitchen"))
+              throw new Error("Permission Denied");
+
             const restaurant = this.getRestaurantById(restaurantID);
             const orders = restaurant.getOrders();
 
             callback(orders);
-            console.log(`[${restaurantID}] Orders retreive.`)
-
+            console.log(`[${restaurantID}] Orders retreive.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -174,13 +231,15 @@ export class SocketManager {
 
         socket.on("getRestaurantStats", (restaurantID, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
             const statistics = this.statistics
               .getStatistics(restaurantID)
               ?.timeframes.values();
 
             callback([...statistics]);
-            console.log(`[${restaurantID}] Stats retreive.`)
-
+            console.log(`[${restaurantID}] Stats retreive.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -188,6 +247,9 @@ export class SocketManager {
 
         socket.on("updateDish", (restaurantID, dish, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
             const { error } = dishSchema.validate(dish);
             if (error) throw new Error(error.message);
 
@@ -202,6 +264,9 @@ export class SocketManager {
 
         socket.on("createDish", (restaurantID, dish, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
             const { error } = DraftDishSchema.validate(dish);
             if (error) throw new Error(error.message);
 
@@ -218,6 +283,9 @@ export class SocketManager {
           "updateOrderStatus",
           (restaurantID, id, newStatus, callback) => {
             try {
+              if (!hasRole(socket, restaurantID, "waiter"))
+                throw new Error("Permission Denied");
+
               const { error } = orderStatusSchema.validate(newStatus);
               if (error) throw new Error(error.message);
 
@@ -235,6 +303,9 @@ export class SocketManager {
           "updateOrderItemStatus",
           (restaurantID, orderID, orderItemID, newStatus, callback) => {
             try {
+              if (!hasRole(socket, restaurantID, "kitchen", "waiter"))
+                throw new Error("Permission Denied");
+
               const { error } = orderItemStatusSchema.validate(newStatus);
               if (error) throw new Error(error.message);
 
@@ -251,6 +322,11 @@ export class SocketManager {
 
         socket.on("createOrder", (restaurantID, order, callback) => {
           try {
+            if (
+              !hasRole(socket, restaurantID, "user") ||
+              !hasTablePermissions(socket, order.origin)
+            )
+              throw new Error("Permission Denied");
             const { error } = orderSchema.validate(order);
             if (error) throw new Error(error.message);
 
@@ -265,6 +341,12 @@ export class SocketManager {
 
         socket.on("getTableOrders", (restaurantID, tableID, callback) => {
           try {
+            if (
+              !hasRole(socket, restaurantID, "user") ||
+              !hasTablePermissions(socket, tableID)
+            )
+              throw new Error("Permission Denied");
+
             const restaurant = this.getRestaurantById(restaurantID);
             const tableOrders = restaurant.getTableOrders(tableID);
 
@@ -276,6 +358,9 @@ export class SocketManager {
 
         socket.on("getRestaurantData", (restaurantID, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "user"))
+              throw new Error("Permission Denied");
+
             const restaurant = this.getRestaurantById(restaurantID);
             const response = {
               name: restaurant.getName(),
@@ -287,8 +372,7 @@ export class SocketManager {
             };
 
             callback(response);
-            console.log(`[${restaurantID}] Retreive restaurant data.`)
-            
+            console.log(`[${restaurantID}] Retreive restaurant data.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -298,6 +382,12 @@ export class SocketManager {
           "createAssistanceRequest",
           (restaurantID, tableID, callback) => {
             try {
+              if (
+                !hasRole(socket, restaurantID, "user") ||
+                !hasTablePermissions(socket, tableID)
+              )
+                throw new Error("Permission Denied");
+
               const restaurant = this.getRestaurantById(restaurantID);
 
               restaurant.sendAssistanceRequest(tableID);
@@ -313,6 +403,12 @@ export class SocketManager {
           "createCheckRequest",
           (restaurantID, tableID, paymentBy, callback) => {
             try {
+              if (
+                !hasRole(socket, restaurantID, "user") ||
+                !hasTablePermissions(socket, tableID)
+              )
+                throw new Error("Permission Denied");
+
               const restaurant = this.getRestaurantById(restaurantID);
 
               restaurant.sendCheckRequest(tableID, paymentBy);
@@ -326,6 +422,9 @@ export class SocketManager {
 
         socket.on("createCategory", (restaurantID, category, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
             const { error } = DraftCategorySchema.validate(category);
             if (error) throw new Error(error.message);
 
@@ -340,6 +439,9 @@ export class SocketManager {
 
         socket.on("updateCategory", (restaurantID, category, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
             const { error } = categorySchema.validate(category);
             if (error) throw new Error(error.message);
 
@@ -354,6 +456,9 @@ export class SocketManager {
 
         socket.on("deleteCategory", (restaurantID, category, callback) => {
           try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
             const { error } = categorySchema.validate(category);
             if (error) throw new Error(error.message);
 
@@ -365,6 +470,29 @@ export class SocketManager {
             catchError(err, callback);
           }
         });
+
+        socket.on(
+          "generateAuthorizationToken",
+          async (restaurantID, payload, callback) => {
+            try {
+              if (!hasRole(socket, restaurantID, "admin"))
+                throw new Error("Permission Denied");
+
+              /*TODO: const { error } = categorySchema.validate(category);
+            if (error) throw new Error(error.message);*/
+
+              const token = await authHandler.generateTokens(
+                payload.roles,
+                payload.restaurantID,
+                payload.tableID
+              );
+
+              callback(JSON.stringify(token));
+            } catch (err) {
+              catchError(err, callback);
+            }
+          }
+        );
       });
     };
 

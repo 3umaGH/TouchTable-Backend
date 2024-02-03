@@ -1,3 +1,4 @@
+import { JWTPayload } from "./auth";
 import { Dish, DraftDish } from "./dish";
 import { Notification } from "./notification";
 import { DraftOrder, Order, OrderItemStatus, OrderStatus } from "./order";
@@ -13,6 +14,12 @@ export interface ServerToClientEvents {
 
   tableSessionClear: () => void;
   restaurantDataUpdated: () => void;
+
+  tokenRefresh: ({
+    access,
+  }: {
+    access: string;
+  }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -117,6 +124,14 @@ export interface ClientToServerEvents {
     id: string,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
+
+  generateAuthorizationToken: (
+    restaurantID: number,
+    payload: JWTPayload,
+    callback: (e: string | { error: boolean; message: string }) => void
+  ) => void;
 }
 
 export interface InterServerEvents {}
+
+export interface SocketData extends JWTPayload {}

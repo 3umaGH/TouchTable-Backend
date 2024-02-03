@@ -17,6 +17,7 @@ import {
 } from "../types/order";
 import { Notification } from "../types/notification";
 import { ThemeProps } from "../types/theme";
+import { JWTPayload } from "../types/auth";
 
 export class Restaurant extends EventEmitter {
   id: number;
@@ -186,7 +187,9 @@ export class Restaurant extends EventEmitter {
     order.status = newStatus as OrderStatus;
 
     this.emit("orderStatusUpdate", order, newStatus, prevStatus);
-    console.log(`[${this.id}] Order #${order.id} status updated to ${newStatus}.`);
+    console.log(
+      `[${this.id}] Order #${order.id} status updated to ${newStatus}.`
+    );
   };
 
   updateOrderItemStatus = (id: string, order: Order, newStatus: string) => {

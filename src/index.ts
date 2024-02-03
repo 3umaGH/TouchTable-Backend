@@ -1,10 +1,14 @@
+import { AuthenticationHandler } from "./authentication/AuthenticationHandler";
 import { mockCategories, mockDishes } from "./mockData";
 import { Restaurant } from "./restaurant/Restaurant";
 import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";
 import { SocketManager } from "./socket/SocketManager";
 import { StatisticsManager } from "./statistics/StatisticsManager";
+import { encode } from 'js-base64';
 
 require("socket.io");
+require("dotenv").config();
+
 const app = require("express");
 const cors = require("cors");
 
@@ -25,8 +29,11 @@ const restaurant = new Restaurant(
   5
 );
 
-//app.use(cors());
+if (!process.env.JWT_KEY) {
+  throw new Error("JWT_KEY variable is not set.");
+}
 
+//app.use(cors());
 export const restaurants = new Map<number, Restaurant>();
 
 restaurants.set(0, restaurant);
@@ -37,6 +44,15 @@ aggregator.initalizeListeners();
 const statisticsManager = new StatisticsManager(aggregator);
 statisticsManager.initalizeListeners();
 
-const socketManager = new SocketManager(aggregator, statisticsManager);
+export const socketManager = new SocketManager(aggregator, statisticsManager);
 socketManager.startListening(3001);
 socketManager.initalizeListeners();
+
+export const authHandler = new AuthenticationHandler();
+
+const getToken = async () => {
+  const ok = await authHandler.generateTokens([ "kitchen", "user", "waiter","admin"], 0, 0)
+  console.log(encode(JSON.stringify(ok)))
+}
+getToken();
+
