@@ -4,7 +4,7 @@ import { Restaurant } from "./restaurant/Restaurant";
 import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";
 import { SocketManager } from "./socket/SocketManager";
 import { StatisticsManager } from "./statistics/StatisticsManager";
-import { encode } from 'js-base64';
+import { encode } from "js-base64";
 
 require("socket.io");
 require("dotenv").config();
@@ -44,15 +44,25 @@ aggregator.initalizeListeners();
 const statisticsManager = new StatisticsManager(aggregator);
 statisticsManager.initalizeListeners();
 
-export const socketManager = new SocketManager(aggregator, statisticsManager);
-socketManager.startListening(3001);
-socketManager.initalizeListeners();
 
-export const authHandler = new AuthenticationHandler();
+
+export const authenticator = new AuthenticationHandler();
 
 const getToken = async () => {
-  const ok = await authHandler.generateTokens([ "kitchen", "user", "waiter","admin"], 0, 0)
-  console.log(encode(JSON.stringify(ok)))
-}
+  const ok = await authenticator.generateTokens(
+    ["kitchen", "user", "waiter", "admin"],
+    0,
+    0
+  );
+  console.log(encode(JSON.stringify(ok)));
+};
 getToken();
 
+
+export const socketManager = new SocketManager(
+  aggregator,
+  authenticator,
+  statisticsManager
+);
+socketManager.startListening(3001);
+socketManager.initalizeListeners();

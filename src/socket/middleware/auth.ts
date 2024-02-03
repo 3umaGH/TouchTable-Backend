@@ -8,58 +8,70 @@ import {
 import { ExtendedError } from "socket.io/dist/namespace";
 import { JWTPayload } from "../../types/auth";
 import { verify } from "jsonwebtoken";
-import { authHandler, socketManager } from "../..";
+import { AuthenticationHandler } from "../../authentication/AuthenticationHandler";
+import { SocketManager } from "../SocketManager";
 
 const jwt = require("jsonwebtoken");
 
 export const authMiddleware = (
-  socket: Socket<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-  >,
-  next: (err?: ExtendedError | undefined) => void
+  authenticator: AuthenticationHandler,
+  socketManager: SocketManager
 ) => {
-  const token = socket.handshake.auth.token;
-  const refreshToken = socket.handshake.auth.refreshToken;
+  return (
+    socket: Socket<
+      ClientToServerEvents,
+      ServerToClientEvents,
+      InterServerEvents,
+      SocketData
+    >,
+    next: (err?: ExtendedError | undefined) => void
+  ) => {
+    const token = socket.handshake.auth.token;
+    const refreshToken = socket.handshake.auth.refreshToken;
 
-  if (!token) return next(new Error("Authorization Failed"));
-  if (!refreshToken) return next(new Error("Authorization Failed"));
+    if (!token) return next(new Error("Authorization Failed 1"));
+    if (!refreshToken) return next(new Error("Authorization Failed 2"));
 
-  const verifyAndSetData = async (token: string) =>
-    await new Promise<void>(async (resolve, reject) => {
+    const verifyAndSetData = async (token: string) =>
+      await new Promise<void>(async (resolve, reject) => {
+        try {
+          const decoded = (await verify(
+            token,
+            process.env.JWT_KEY!
+          )) as unknown as JWTPayload;
+
+          authenticator.updateLastLogin(decoded.id, socket.handshake.address);
+          authenticator.updateSocketDataFields(decoded.id, socket);
+
+          resolve();
+          return next();
+        } catch (error) {
+          reject();
+        }
+      });
+
+    verifyAndSetData(token).catch(async () => {
       try {
-        const decoded = (await verify(
-          token,
-          process.env.JWT_KEY!
-        )) as unknown as JWTPayload;
+        const decoded = (await verify(refreshToken, process.env.JWT_KEY!)) as {
+          id: string;
+        };
 
-        socket.data.roles = [...decoded.roles];
-        socket.data.restaurantID = decoded.restaurantID;
-        socket.data.tableID = decoded.tableID;
+        const newAccess = await authenticator.generateNewAccessToken(
+          decoded.id,
+          socket.handshake.address
+        );
 
-        resolve();
+        socket.data.roles = [...newAccess.payload.roles];
+        socket.data.restaurantID = newAccess.payload.restaurantID;
+        socket.data.tableID = newAccess.payload.tableID;
+
+        socketManager.pushTokenRefreshQueue(socket.id, newAccess.token);
+        authenticator.updateLastLogin(decoded.id, socket.handshake.address);
+
         return next();
-      } catch (error) {
-        reject();
+      } catch (err) {
+        return next(new Error("Authorization Failed 3 "));
       }
     });
-
-  verifyAndSetData(token).catch(async () => {
-    try {
-      const decoded = await verify(refreshToken, process.env.JWT_KEY!);
-
-      const newAccess = await authHandler.generateNewAccessToken(refreshToken);
-
-      socket.data.roles = [...newAccess.payload.roles];
-      socket.data.restaurantID = newAccess.payload.restaurantID;
-      socket.data.tableID = newAccess.payload.tableID;
-
-      socketManager.pushTokenRefreshQueue(socket.id, newAccess.token);
-      return next();
-    } catch (err) {
-      return next(new Error("Authorization Failed"));
-    }
-  });
+  };
 };

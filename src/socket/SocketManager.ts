@@ -23,17 +23,21 @@ import {
 import { authMiddleware } from "./middleware/auth";
 import { hasRole, hasTablePermissions } from "./authorizationUtils";
 import { AuthenticationHandler } from "../authentication/AuthenticationHandler";
-import { authHandler } from "..";
 const jwt = require("jsonwebtoken");
 
 export class SocketManager {
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents>;
   aggregator: RestaurantAggregator;
+  authenticator: AuthenticationHandler;
   statistics: StatisticsManager;
 
   tokenRefreshQueue: Map<string, string>;
 
-  constructor(aggregator: RestaurantAggregator, statistics: StatisticsManager) {
+  constructor(
+    aggregator: RestaurantAggregator,
+    authenticator: AuthenticationHandler,
+    statistics: StatisticsManager
+  ) {
     this.io = new Server<
       ClientToServerEvents,
       ServerToClientEvents,
@@ -49,6 +53,7 @@ export class SocketManager {
     });
 
     this.aggregator = aggregator;
+    this.authenticator = authenticator;
     this.statistics = statistics;
 
     this.tokenRefreshQueue = new Map();
@@ -57,7 +62,7 @@ export class SocketManager {
   startListening = (port: number) => {
     this.io.listen(port);
 
-    this.io.use(authMiddleware);
+    this.io.use(authMiddleware(this.authenticator, this));
 
     console.log(`Listening on ${port} port.`);
   };
@@ -144,15 +149,13 @@ export class SocketManager {
           socket.emit("tokenRefresh", {
             access: this.tokenRefreshQueue.get(socket.id)!,
           });
-
+          /* TODO: clean this up after a while or something */
           this.tokenRefreshQueue.delete(socket.id);
         }
 
         socket.on("joinRoom", (restaurantID, room, callback) => {
           try {
             let isAuthorized = true;
-
-            console.log(room);
 
             if (room.includes("table_")) {
               const tableID = parseInt(room.replace("table_", ""));
@@ -481,7 +484,7 @@ export class SocketManager {
               /*TODO: const { error } = categorySchema.validate(category);
             if (error) throw new Error(error.message);*/
 
-              const token = await authHandler.generateTokens(
+              const token = await this.authenticator.generateTokens(
                 payload.roles,
                 payload.restaurantID,
                 payload.tableID
