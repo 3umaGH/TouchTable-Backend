@@ -527,6 +527,11 @@ export class SocketManager {
             }
           }
         );
+
+        socket.onAny(() => {
+          if (!this.authenticator.hasAccess(socket.data.id))
+            socket.disconnect();
+        });
       });
     };
 

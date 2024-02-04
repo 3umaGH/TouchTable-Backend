@@ -25,6 +25,12 @@ export class AuthenticationHandler extends EventEmitter {
     }, 60000);
   };
 
+  hasAccess = (id: string) => {
+    const token = this.refreshTokens.get(id);
+
+    return token && token.active;
+  };
+
   getSessions = (restaurantID: number) => {
     return Array.from(this.refreshTokens)
       .filter(([_, value]) => value.data.restaurantID === restaurantID)
@@ -35,9 +41,10 @@ export class AuthenticationHandler extends EventEmitter {
     const foundData = this.refreshTokens.get(id);
 
     if (!foundData) throw new Error("Token not found");
-    if(foundData.active) throw new Error("Access is already revoked")
+    if (!foundData.active) throw new Error("Access is already revoked");
 
     foundData.active = false;
+
     this.emit("refreshTokensUpdated", foundData.data.restaurantID);
   };
 
@@ -61,6 +68,7 @@ export class AuthenticationHandler extends EventEmitter {
 
     if (!foundData) throw new Error("Invalid refresh token");
 
+    socket.data.id = foundData.data.id;
     socket.data.roles = foundData.data.roles;
     socket.data.restaurantID = foundData.data.restaurantID;
     socket.data.tableID = foundData.data.tableID;
