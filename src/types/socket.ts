@@ -16,11 +16,7 @@ export interface ServerToClientEvents {
   restaurantDataUpdated: () => void;
   restaurantSessionsUpdated: () => void;
 
-  tokenRefresh: ({
-    access,
-  }: {
-    access: string;
-  }) => void;
+  tokenRefresh: ({ access }: { access: string }) => void;
 }
 
 export interface ClientToServerEvents {
