@@ -1,4 +1,4 @@
-import { JWTPayload } from "./auth";
+import { JWTPayload, RefreshToken } from "./auth";
 import { Dish, DraftDish } from "./dish";
 import { Notification } from "./notification";
 import { DraftOrder, Order, OrderItemStatus, OrderStatus } from "./order";
@@ -14,6 +14,7 @@ export interface ServerToClientEvents {
 
   tableSessionClear: () => void;
   restaurantDataUpdated: () => void;
+  restaurantSessionsUpdated: () => void;
 
   tokenRefresh: ({
     access,
@@ -25,7 +26,7 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   joinRoom: (
     restaurantID: number,
-    room: "waiters" | "kitchen" | string,
+    room: "waiter" | "kitchen" | string,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
@@ -114,6 +115,11 @@ export interface ClientToServerEvents {
     callback: (e: StatsKey[] | { error: boolean; message: string }) => void
   ) => void;
 
+  getRestaurantSessions: (
+    id: number,
+    callback: (e: RefreshToken[] | { error: boolean; message: string }) => void
+  ) => void;
+
   getRestaurantNotifications: (
     id: number,
     callback: (e: Notification[] | { error: boolean; message: string }) => void
@@ -129,6 +135,12 @@ export interface ClientToServerEvents {
     restaurantID: number,
     payload: JWTPayload,
     callback: (e: string | { error: boolean; message: string }) => void
+  ) => void;
+
+  revokeTokenAccess: (
+    restaurantID: number,
+    id: string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 }
 

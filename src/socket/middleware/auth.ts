@@ -61,12 +61,9 @@ export const authMiddleware = (
           socket.handshake.address
         );
 
-        socket.data.roles = [...newAccess.payload.roles];
-        socket.data.restaurantID = newAccess.payload.restaurantID;
-        socket.data.tableID = newAccess.payload.tableID;
-
         socketManager.pushTokenRefreshQueue(socket.id, newAccess.token);
         authenticator.updateLastLogin(decoded.id, socket.handshake.address);
+        authenticator.updateSocketDataFields(decoded.id, socket);
 
         return next();
       } catch (err) {

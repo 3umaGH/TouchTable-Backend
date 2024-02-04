@@ -77,14 +77,14 @@ export class SocketManager {
         "notificationStatusUpdate",
         (restaurantID, notification) => {
           this.io
-            .to(`${restaurantID}_waiters`)
+            .to(`${restaurantID}_waiter`)
             .emit("notificationStatusUpdate", notification);
         }
       );
 
       this.aggregator.on("newOrder", (restaurantID, order: Order) => {
         this.io
-          .to(`${restaurantID}_waiters`)
+          .to(`${restaurantID}_waiter`)
           .to(`${restaurantID}_kitchen`)
           .to(`${restaurantID}_table_${order.origin}`)
           .to(`${restaurantID}_admin`)
@@ -93,7 +93,7 @@ export class SocketManager {
 
       this.aggregator.on("orderStatusUpdate", (restaurantID, order: Order) => {
         this.io
-          .to(`${restaurantID}_waiters`)
+          .to(`${restaurantID}_waiter`)
           .to(`${restaurantID}_kitchen`)
           .to(`${restaurantID}_table_${order.origin}`)
           .to(`${restaurantID}_admin`)
@@ -104,7 +104,7 @@ export class SocketManager {
         "orderItemStatusUpdate",
         (restaurantID, order: Order, orderItem: OrderItem) => {
           this.io
-            .to(`${restaurantID}_waiters`)
+            .to(`${restaurantID}_waiter`)
             .to(`${restaurantID}_kitchen`)
             .to(`${restaurantID}_table_${order.origin}`)
             .to(`${restaurantID}_admin`)
@@ -116,7 +116,7 @@ export class SocketManager {
         "newNotification",
         (restaurantID, notification: Notification) => {
           this.io
-            .to(`${restaurantID}_waiters`)
+            .to(`${restaurantID}_waiter`)
             .emit("newNotification", notification);
         }
       );
@@ -134,7 +134,7 @@ export class SocketManager {
       this.aggregator.on("restaurantDataUpdated", (restaurantID: number) => {
         this.io
           .to(`${restaurantID}_users`)
-          .to(`${restaurantID}_waiters`)
+          .to(`${restaurantID}_waiter`)
           .to(`${restaurantID}_kitchen`)
           .to(`${restaurantID}_admin`)
           .emit("restaurantDataUpdated");
@@ -166,7 +166,7 @@ export class SocketManager {
             if (room === "users" && !hasRole(socket, restaurantID, "user"))
               isAuthorized = false;
 
-            if (room === "waiters" && !hasRole(socket, restaurantID, "waiter"))
+            if (room === "waiter" && !hasRole(socket, restaurantID, "waiter"))
               isAuthorized = false;
 
             if (room === "admin" && !hasRole(socket, restaurantID, "admin"))
@@ -243,6 +243,19 @@ export class SocketManager {
 
             callback([...statistics]);
             console.log(`[${restaurantID}] Stats retreive.`);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("getRestaurantSessions", (restaurantID, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            callback(this.authenticator.getSessions(restaurantID));
+
+            console.log(`[${restaurantID}] Sessions retreive.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -496,10 +509,37 @@ export class SocketManager {
             }
           }
         );
+        socket.on(
+          "revokeTokenAccess",
+          async (restaurantID, payload, callback) => {
+            try {
+              if (!hasRole(socket, restaurantID, "admin"))
+                throw new Error("Permission Denied");
+
+              /*TODO: const { error } = categorySchema.validate(category);
+            if (error) throw new Error(error.message);*/
+
+              this.authenticator.revokeTokenAccess(payload);
+
+              callback(true);
+            } catch (err) {
+              catchError(err, callback);
+            }
+          }
+        );
+      });
+    };
+
+    const authenticatorEvents = () => {
+      this.authenticator.on("refreshTokensUpdated", (restaurantID: number) => {
+        this.io.to(`${restaurantID}_admin`).emit("restaurantSessionsUpdated");
+
+        console.log(`[${restaurantID}] Restaurant sessions updated.`);
       });
     };
 
     aggregatorEvents();
+    authenticatorEvents();
     socketEvents();
   };
 
