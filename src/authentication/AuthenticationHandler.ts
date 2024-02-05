@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 import { SocketData } from "../types/socket";
 import { EventEmitter } from "stream";
 
+require("dotenv");
+
 export class AuthenticationHandler extends EventEmitter {
   refreshTokens: Map<string, RefreshToken>;
 
@@ -117,6 +119,20 @@ export class AuthenticationHandler extends EventEmitter {
 
     this.emit("refreshTokensUpdated", restaurantID);
 
-    return { access: accessToken, refresh: refreshToken };
+    setTimeout(
+      () => {
+        const token = this.refreshTokens.get(payload.id);
+        if (token?.lastIP === null) {
+          token.active = false;
+
+          console.log(`[${restaurantID}] Token ${payload.id} has timed out.`);
+
+          this.emit("refreshTokensUpdated", restaurantID);
+        }
+      },
+      parseFloat(process.env.TOKEN_TIMEOUT_SECONDS ?? "120000") * 1000
+    );
+
+    return { id: payload.id, access: accessToken, refresh: refreshToken };
   };
 }

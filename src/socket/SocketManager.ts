@@ -500,7 +500,7 @@ export class SocketManager {
               const token = await this.authenticator.generateTokens(
                 payload.roles,
                 payload.restaurantID,
-                payload.tableID
+                payload.tableID,
               );
 
               callback(JSON.stringify(token));
