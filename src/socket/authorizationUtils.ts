@@ -1,6 +1,5 @@
 import { Socket } from "socket.io";
-import { JWTPayload, UserRole } from "../types/auth";
-import { sign, verify } from "jsonwebtoken";
+import { UserRole } from "../types/auth";
 import { SocketData } from "../types/socket";
 
 export const hasRole = (
@@ -20,4 +19,3 @@ export const hasTablePermissions = (
 ) => {
   return tableID === socket.data.tableID;
 };
-
