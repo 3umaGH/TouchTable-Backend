@@ -33,9 +33,10 @@ export const authMiddleware = (
     if (!refreshToken) return next(new Error("Authorization Failed 2"));
 
     const verifyAndSetData = async (token: string) =>
-    
       await new Promise<void>(async (resolve, reject) => {
-         console.log(socket.request)
+        let ip =
+          socket.handshake.headers["x-forwarded-for"]?.toString() ??
+          socket.handshake.address;
 
         try {
           const decoded = (await verify(
@@ -43,10 +44,9 @@ export const authMiddleware = (
             process.env.JWT_KEY!
           )) as unknown as JWTPayload;
 
-          authenticator.updateLastLogin(decoded.id, socket.handshake.address);
+          authenticator.updateLastLogin(decoded.id, ip);
           authenticator.updateSocketDataFields(decoded.id, socket);
 
-         
           resolve();
           return next();
         } catch (error) {
