@@ -33,7 +33,10 @@ export const authMiddleware = (
     if (!refreshToken) return next(new Error("Authorization Failed 2"));
 
     const verifyAndSetData = async (token: string) =>
+    
       await new Promise<void>(async (resolve, reject) => {
+         console.log(socket.request)
+
         try {
           const decoded = (await verify(
             token,
@@ -43,6 +46,7 @@ export const authMiddleware = (
           authenticator.updateLastLogin(decoded.id, socket.handshake.address);
           authenticator.updateSocketDataFields(decoded.id, socket);
 
+         
           resolve();
           return next();
         } catch (error) {
