@@ -109,6 +109,14 @@ export class SocketManager {
             .to(`${restaurantID}_table_${order.origin}`)
             .to(`${restaurantID}_admin`)
             .emit("orderUpdate", order);
+
+          this.io
+            .to(`${restaurantID}_table_${order.origin}`)
+            .emit(
+              "orderItemStatusUpdate",
+              orderItem.dish.dishID,
+              orderItem.status
+            );
         }
       );
 
@@ -500,7 +508,7 @@ export class SocketManager {
               const token = await this.authenticator.generateTokens(
                 payload.roles,
                 payload.restaurantID,
-                payload.tableID,
+                payload.tableID
               );
 
               callback(JSON.stringify(token));

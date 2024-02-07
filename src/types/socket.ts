@@ -11,6 +11,7 @@ export interface ServerToClientEvents {
 
   newOrderCreated: (order: Order) => void;
   orderUpdate: (order: Order) => void;
+  orderItemStatusUpdate: (dishID: number, newStatus: OrderItemStatus) => void;
 
   tableSessionClear: () => void;
   restaurantDataUpdated: () => void;
