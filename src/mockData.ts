@@ -257,12 +257,12 @@ export const mockCategories: Category[] = [
     title: "Main Courses",
   },
   {
-    id: 2,
-    title: "Pizzas",
-  },
-  {
     id: 3,
     title: "Pasta Dishes",
+  },
+  {
+    id: 2,
+    title: "Pizzas",
   },
   {
     id: 4,
