@@ -5,7 +5,7 @@ export const mockDishes: Dish[] = [
   {
     id: 1,
     categoryId: 0,
-    image: "https://i.imgur.com/z5uQO2g.png",
+    image: "https://static.vecteezy.com/system/resources/previews/023/184/453/large_2x/hamburger-with-flying-ingredients-on-a-dark-background-copy-space-ai-generative-image-free-photo.jpg",
     price: 18.0,
     discount: 0,
     params: {
