@@ -4,6 +4,7 @@ import { Notification } from "./notification";
 import { DraftOrder, Order, OrderItemStatus, OrderStatus } from "./order";
 import { Category, RestaurantData, DraftCategory } from "./restaurant";
 import { StatsKey } from "./statistics";
+import { ThemeProps } from "./theme";
 
 export interface ServerToClientEvents {
   newNotification: (notification: Notification) => void;
@@ -137,6 +138,12 @@ export interface ClientToServerEvents {
   revokeTokenAccess: (
     restaurantID: number,
     id: string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  setTheme: (
+    restaurantID: number,
+    theme: ThemeProps,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 }

@@ -378,4 +378,12 @@ export class Restaurant extends EventEmitter {
 
     console.log(`[${this.id}] Create Dish ${newDish.params.title}.`);
   };
+
+  setTheme = (newTheme: ThemeProps) => {
+    this.theme = newTheme;
+    this.emit("restaurantDataUpdated");
+
+    console.log(`[${this.id}] Theme Updated.`);
+
+  }
 }

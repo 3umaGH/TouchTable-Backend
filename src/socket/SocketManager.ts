@@ -536,6 +536,24 @@ export class SocketManager {
           }
         );
 
+        socket.on("setTheme", async (restaurantID, payload, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            /*TODO: const { error } = categorySchema.validate(category);
+            if (error) throw new Error(error.message);*/
+
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            restaurant.setTheme(payload);
+
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
         socket.onAny(() => {
           if (!this.authenticator.hasAccess(socket.data.id))
             socket.disconnect();
