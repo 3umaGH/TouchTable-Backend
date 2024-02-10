@@ -22,7 +22,7 @@ const theme = {
 const restaurant = new Restaurant(
   0,
   "Bobs Ribs and Steak",
-  "https://4m4you.com/wp-content/uploads/2020/06/logo-placeholder-300x120.png",
+  "https://i.imgur.com/hy5Ea6L.png",
   theme,
   mockDishes,
   mockCategories,

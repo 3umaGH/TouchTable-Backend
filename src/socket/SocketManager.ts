@@ -554,6 +554,33 @@ export class SocketManager {
           }
         });
 
+        socket.on("addTable", async (restaurantID, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            const restaurant = this.getRestaurantById(restaurantID);
+
+            callback(restaurant.addTable());
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("deleteTable", async (restaurantID, tableID, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            const restaurant = this.getRestaurantById(restaurantID);
+            restaurant.deleteTable(tableID);
+
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
         socket.onAny(() => {
           if (!this.authenticator.hasAccess(socket.data.id))
             socket.disconnect();

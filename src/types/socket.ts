@@ -2,7 +2,7 @@ import { JWTPayload, RefreshToken } from "./auth";
 import { Dish, DraftDish } from "./dish";
 import { Notification } from "./notification";
 import { DraftOrder, Order, OrderItemStatus, OrderStatus } from "./order";
-import { Category, RestaurantData, DraftCategory } from "./restaurant";
+import { Category, RestaurantData, DraftCategory, Table } from "./restaurant";
 import { StatsKey } from "./statistics";
 import { ThemeProps } from "./theme";
 
@@ -144,6 +144,17 @@ export interface ClientToServerEvents {
   setTheme: (
     restaurantID: number,
     theme: ThemeProps,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  addTable: (
+    restaurantID: number,
+    callback: (e: Table | { error: boolean; message: string }) => void
+  ) => void;
+
+  deleteTable: (
+    restaurantID: number,
+    id: number,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 }

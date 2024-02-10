@@ -384,6 +384,29 @@ export class Restaurant extends EventEmitter {
     this.emit("restaurantDataUpdated");
 
     console.log(`[${this.id}] Theme Updated.`);
+  };
 
-  }
+  addTable = () => {
+    const tableID =
+      this.tables.reduce((maxId, table) => Math.max(table.id ?? 0, maxId), -1) +
+      1;
+
+    const newTable = { id: tableID, activeOrders: [] };
+    this.tables.push(newTable);
+    this.emit("restaurantDataUpdated");
+
+    console.log(`[${this.id}] Added table #${tableID}.`);
+    return newTable;
+  };
+
+  deleteTable = (id: number) => {
+    const tableIndex = this.tables.findIndex((table) => table.id === id);
+
+    if (tableIndex === -1) throw new Error("Table not found.");
+
+    this.tables.splice(tableIndex, 1);
+    this.emit("restaurantDataUpdated");
+
+    console.log(`[${this.id}] Deleted table #${id}.`);
+  };
 }
