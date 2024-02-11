@@ -21,7 +21,7 @@ export class AuthenticationHandler extends EventEmitter {
   initalizeCleaner = () => {
     setInterval(() => {
       this.refreshTokens.forEach((token) => {
-        if (Date.now() > token.exp * 1000)
+        if (!token.active || Date.now() > token.exp * 1000)
           this.refreshTokens.delete(token.data.id);
       });
     }, 60000);
