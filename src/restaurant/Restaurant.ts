@@ -403,6 +403,8 @@ export class Restaurant extends EventEmitter {
     const tableIndex = this.tables.findIndex((table) => table.id === id);
 
     if (tableIndex === -1) throw new Error("Table not found.");
+    if (this.tables[tableIndex].activeOrders.length > 0)
+      throw new Error("Cannot delete table that has active orders.");
 
     this.tables.splice(tableIndex, 1);
     this.emit("restaurantDataUpdated");
