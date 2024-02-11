@@ -21,13 +21,11 @@ export interface ServerToClientEvents {
   tokenRefresh: ({ access }: { access: string }) => void;
 }
 
-export interface ClientToServerEvents {
-  joinRoom: (
-    restaurantID: number,
-    room: "waiter" | "kitchen" | string,
-    callback: (e: boolean | { error: boolean; message: string }) => void
-  ) => void;
+export type ClientToServerEvents = AdminClientEvents &
+  StaffClientEvents &
+  ClientUserEvents;
 
+type AdminClientEvents = {
   createCategory: (
     restaurantID: number,
     category: DraftCategory,
@@ -46,66 +44,16 @@ export interface ClientToServerEvents {
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
-  updateDish: (
-    restaurantID: number,
-    dish: Dish,
-    callback: (e: boolean | { error: boolean; message: string }) => void
-  ) => void;
-
   createDish: (
     restaurantID: number,
     dish: DraftDish,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
-  createOrder: (
+  updateDish: (
     restaurantID: number,
-    order: DraftOrder,
-    callback: (e: Order | { error: boolean; message: string }) => void
-  ) => void;
-
-  updateOrderStatus: (
-    restaurantID: number,
-    id: number,
-    newStatus: OrderStatus,
+    dish: Dish,
     callback: (e: boolean | { error: boolean; message: string }) => void
-  ) => void;
-
-  updateOrderItemStatus: (
-    restaurantID: number,
-    orderID: number,
-    orderItemID: string,
-    newStatus: OrderItemStatus,
-    callback: (e: boolean | { error: boolean; message: string }) => void
-  ) => void;
-
-  createCheckRequest: (
-    restaurantID: number,
-    tableID: number,
-    payment: "cash" | "card",
-    callback: (e: boolean | { error: boolean; message: string }) => void
-  ) => void;
-
-  createAssistanceRequest: (
-    restaurantID: number,
-    tableID: number,
-    callback: (e: boolean | { error: boolean; message: string }) => void
-  ) => void;
-
-  getTableOrders: (
-    restaurantID: number,
-    id: number,
-    callback: (e: Order[] | { error: boolean; message: string }) => void
-  ) => void;
-
-  getRestaurantData: (
-    restaurantID: number,
-    callback: (e: RestaurantData | { error: boolean; message: string }) => void
-  ) => void;
-
-  getRestaurantOrders: (
-    id: number,
-    callback: (e: Order[] | { error: boolean; message: string }) => void
   ) => void;
 
   getRestaurantStats: (
@@ -116,17 +64,6 @@ export interface ClientToServerEvents {
   getRestaurantSessions: (
     id: number,
     callback: (e: RefreshToken[] | { error: boolean; message: string }) => void
-  ) => void;
-
-  getRestaurantNotifications: (
-    id: number,
-    callback: (e: Notification[] | { error: boolean; message: string }) => void
-  ) => void;
-
-  setNotificationInactive: (
-    restaurantID: number,
-    id: string,
-    callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
 
   generateAuthorizationToken: (
@@ -157,7 +94,78 @@ export interface ClientToServerEvents {
     id: number,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
-}
+};
+
+type StaffClientEvents = {
+  updateOrderStatus: (
+    restaurantID: number,
+    id: number,
+    newStatus: OrderStatus,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  updateOrderItemStatus: (
+    restaurantID: number,
+    orderID: number,
+    orderItemID: string,
+    newStatus: OrderItemStatus,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  getRestaurantOrders: (
+    id: number,
+    callback: (e: Order[] | { error: boolean; message: string }) => void
+  ) => void;
+
+  getRestaurantNotifications: (
+    id: number,
+    callback: (e: Notification[] | { error: boolean; message: string }) => void
+  ) => void;
+
+  setNotificationInactive: (
+    restaurantID: number,
+    id: string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+};
+
+type ClientUserEvents = {
+  joinRoom: (
+    restaurantID: number,
+    room: "waiter" | "kitchen" | string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  createOrder: (
+    restaurantID: number,
+    order: DraftOrder,
+    callback: (e: Order | { error: boolean; message: string }) => void
+  ) => void;
+
+  createCheckRequest: (
+    restaurantID: number,
+    tableID: number,
+    payment: "cash" | "card",
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  createAssistanceRequest: (
+    restaurantID: number,
+    tableID: number,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
+
+  getTableOrders: (
+    restaurantID: number,
+    id: number,
+    callback: (e: Order[] | { error: boolean; message: string }) => void
+  ) => void;
+
+  getRestaurantData: (
+    restaurantID: number,
+    callback: (e: RestaurantData | { error: boolean; message: string }) => void
+  ) => void;
+};
 
 export interface InterServerEvents {}
 
