@@ -175,4 +175,6 @@ type ClientUserEvents = {
 
 export interface InterServerEvents {}
 
-export interface SocketData extends JWTPayload {}
+export interface SocketData extends JWTPayload {
+  ip: string;
+}

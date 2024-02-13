@@ -4,6 +4,7 @@ import { Order, OrderItem, OrderItemStatus, OrderStatus } from "../types/order";
 import { Notification, NotificationType } from "../types/notification";
 import { v4 as uuidv4 } from "uuid";
 import { calculateOrderItemTotal, calculateOrderTotal } from "../util";
+import { LogSystemEvent } from "../logger/Logger";
 
 export class RestaurantAggregator extends EventEmitter {
   restaurants: Restaurant[];
@@ -172,7 +173,14 @@ export class RestaurantAggregator extends EventEmitter {
 
       restaurant.createNotification(notification);
 
-      console.log(`[${restaurant.id}] Sent new notification ${type}`);
+      LogSystemEvent(
+        restaurant.id,
+        `Created new ${type} notification. (${notification.id}) (extra: itemID: ${extraData?.orderItemID || "-"}, orderID: ${(
+          extraData?.orderID || []
+        ).join(
+          " ,"
+        )}, paymentBy: ${extraData?.paymentBy || "-"})`
+      );
     } catch (err) {
       console.log(err);
     }

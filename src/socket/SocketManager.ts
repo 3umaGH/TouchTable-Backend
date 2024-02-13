@@ -23,6 +23,7 @@ import {
 import { authMiddleware } from "./middleware/auth";
 import { hasRole, hasTablePermissions } from "./authorizationUtils";
 import { AuthenticationHandler } from "../authentication/AuthenticationHandler";
+import { LogEvent } from "../logger/Logger";
 const jwt = require("jsonwebtoken");
 
 export class SocketManager {
@@ -146,8 +147,6 @@ export class SocketManager {
           .to(`${restaurantID}_kitchen`)
           .to(`${restaurantID}_admin`)
           .emit("restaurantDataUpdated");
-
-        console.log(`[${restaurantID}] Restaurant Data Updated.`);
       });
     };
 
@@ -186,10 +185,7 @@ export class SocketManager {
 
             socket.join(`${restaurantID}_${room}`);
             callback(true);
-
-            console.log(
-              `[${restaurantID}] Client joined ${restaurantID}_${room} room.`
-            );
+            LogEvent(restaurantID, socket.data, `Joined ${room} room.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -204,8 +200,7 @@ export class SocketManager {
             const notifications = restaurant.getNotifications();
 
             callback(notifications);
-
-            console.log(`[${restaurantID}] Retreive notifications.`);
+            LogEvent(restaurantID, socket.data, `Retreive notifications.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -220,6 +215,11 @@ export class SocketManager {
             restaurant.setNotificationInactive(id);
 
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Set notification ${id} inactive.`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -234,7 +234,7 @@ export class SocketManager {
             const orders = restaurant.getOrders();
 
             callback(orders);
-            console.log(`[${restaurantID}] Orders retreive.`);
+            LogEvent(restaurantID, socket.data, `Retreive global orders.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -250,7 +250,7 @@ export class SocketManager {
               ?.timeframes.values();
 
             callback([...statistics]);
-            console.log(`[${restaurantID}] Stats retreive.`);
+            LogEvent(restaurantID, socket.data, `Retreive statistics.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -262,8 +262,7 @@ export class SocketManager {
               throw new Error("Permission Denied");
 
             callback(this.authenticator.getSessions(restaurantID));
-
-            console.log(`[${restaurantID}] Sessions retreive.`);
+            LogEvent(restaurantID, socket.data, `Retreive sessions.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -281,6 +280,11 @@ export class SocketManager {
 
             restaurant.updateDish(dish);
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Update dish "${dish.params.title}" (${dish.id}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -298,6 +302,11 @@ export class SocketManager {
 
             restaurant.createDish(dish);
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Create dish "${dish.params.title}" (${dish.id}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -317,6 +326,12 @@ export class SocketManager {
 
               restaurant.updateOrderStatus(id, newStatus);
               callback(true);
+
+              LogEvent(
+                restaurantID,
+                socket.data,
+                `Update Order Status (order: ${id}, new status: ${newStatus}).`
+              );
             } catch (err) {
               catchError(err, callback);
             }
@@ -338,6 +353,12 @@ export class SocketManager {
 
               restaurant.updateOrderItemStatus(orderItemID, order, newStatus);
               callback(true);
+
+              LogEvent(
+                restaurantID,
+                socket.data,
+                `Update Order Item (${orderItemID}) Status (order: ${orderID}, new status: ${newStatus}).`
+              );
             } catch (err) {
               catchError(err, callback);
             }
@@ -358,6 +379,11 @@ export class SocketManager {
             const assignedOrder = restaurant.createOrder(order);
 
             callback(assignedOrder);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Create Order (#${assignedOrder.id}) (items: ${assignedOrder.items.length}) with total price of ${assignedOrder.price?.finalPrice}.`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -375,6 +401,11 @@ export class SocketManager {
             const tableOrders = restaurant.getTableOrders(tableID);
 
             callback(tableOrders);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Retreive ${tableID} table orders.`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -397,7 +428,7 @@ export class SocketManager {
             };
 
             callback(response);
-            console.log(`[${restaurantID}] Retreive restaurant data.`);
+            LogEvent(restaurantID, socket.data, `Retreive restaurant data.`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -418,6 +449,11 @@ export class SocketManager {
               restaurant.sendAssistanceRequest(tableID);
 
               callback(true);
+              LogEvent(
+                restaurantID,
+                socket.data,
+                `Create assistance request (table: ${tableID}).`
+              );
             } catch (err) {
               catchError(err, callback);
             }
@@ -439,6 +475,11 @@ export class SocketManager {
               restaurant.sendCheckRequest(tableID, paymentBy);
 
               callback(true);
+              LogEvent(
+                restaurantID,
+                socket.data,
+                `Create check request (table: ${tableID}, type: ${paymentBy}).`
+              );
             } catch (err) {
               catchError(err, callback);
             }
@@ -457,6 +498,11 @@ export class SocketManager {
 
             restaurant.createCategory(category);
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Create category "${category.title}" id: (${category.id}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -474,6 +520,11 @@ export class SocketManager {
 
             restaurant.updateCategory(category);
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Update category "${category.title}" id: (${category.id}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -491,6 +542,11 @@ export class SocketManager {
 
             restaurant.deleteCategory(category);
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Delete category "${category.title}" id: (${category.id}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -513,6 +569,13 @@ export class SocketManager {
               );
 
               callback(JSON.stringify(token));
+              LogEvent(
+                restaurantID,
+                socket.data,
+                `Generate authorization token (roles: ${payload.roles.join(
+                  ", "
+                )}, table: ${payload.tableID}).`
+              );
             } catch (err) {
               catchError(err, callback);
             }
@@ -531,6 +594,11 @@ export class SocketManager {
               this.authenticator.revokeTokenAccess(payload);
 
               callback(true);
+              LogEvent(
+                restaurantID,
+                socket.data,
+                `Revoke token access (${payload}).`
+              );
             } catch (err) {
               catchError(err, callback);
             }
@@ -550,6 +618,7 @@ export class SocketManager {
             restaurant.setTheme(payload);
 
             callback(true);
+            LogEvent(restaurantID, socket.data, `Update theme (${payload}).`);
           } catch (err) {
             catchError(err, callback);
           }
@@ -561,8 +630,14 @@ export class SocketManager {
               throw new Error("Permission Denied");
 
             const restaurant = this.getRestaurantById(restaurantID);
+            const table = restaurant.addTable();
 
-            callback(restaurant.addTable());
+            callback(table);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Add new table (id: ${table.id}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -577,6 +652,11 @@ export class SocketManager {
             restaurant.deleteTable(tableID);
 
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Delete table (id: ${tableID}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -591,6 +671,11 @@ export class SocketManager {
             restaurant.setDetails(details);
 
             callback(true);
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Update restaurant details (name: ${details.name}, description: ${restaurant.description}).`
+            );
           } catch (err) {
             catchError(err, callback);
           }
@@ -606,8 +691,6 @@ export class SocketManager {
     const authenticatorEvents = () => {
       this.authenticator.on("refreshTokensUpdated", (restaurantID: number) => {
         this.io.to(`${restaurantID}_admin`).emit("restaurantSessionsUpdated");
-
-        console.log(`[${restaurantID}] Restaurant sessions updated.`);
       });
     };
 
