@@ -100,6 +100,18 @@ type AdminClientEvents = {
     { name, description }: { name: string; description: string },
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
+
+  uploadLogo: (
+    restaurantID: number,
+    file: Buffer,
+    callback: (e: string | { error: boolean; message: string }) => void
+  ) => void;
+
+  setLogo: (
+    restaurantID: number,
+    url: string,
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
 };
 
 type StaffClientEvents = {

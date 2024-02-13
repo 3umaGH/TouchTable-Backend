@@ -1,3 +1,4 @@
+import { Response } from "express";
 import { AuthenticationHandler } from "./authentication/AuthenticationHandler";
 import { LogEvent, LogSystemEvent } from "./logger/Logger";
 import { mockCategories, mockDishes } from "./mockData";
@@ -6,11 +7,14 @@ import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";
 import { SocketManager } from "./socket/SocketManager";
 import { StatisticsManager } from "./statistics/StatisticsManager";
 import { encode } from "js-base64";
+import { resolve } from "path";
 
 require("socket.io");
 require("dotenv").config();
 
-const app = require("express");
+const express = require("express");
+const app = express();
+
 const cors = require("cors");
 
 const theme = {
@@ -65,3 +69,10 @@ export const socketManager = new SocketManager(
 );
 socketManager.startListening(3001);
 socketManager.initalizeListeners();
+
+const publicPath = resolve(__dirname, process.env.LOGO_FOLDER!);
+app.use("/cdn", express.static(publicPath));
+
+app.listen(80, () => {
+  console.log(`Server is running on port ${80}`);
+});

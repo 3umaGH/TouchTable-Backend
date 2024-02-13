@@ -74,6 +74,8 @@ export const catchError = (
 ) => {
   if (err instanceof Error) callback({ error: true, message: err.message });
   else callback({ error: true, message: "Unknown Error" });
+
+  console.log(err)
 };
 
 export const calculateOrderItemTotal = (

@@ -403,4 +403,9 @@ export class Restaurant extends EventEmitter {
 
     this.emit("restaurantDataUpdated");
   };
+
+  setLogo = (logo: string) => {
+    this.logo = logo;
+    this.emit("restaurantDataUpdated");
+  };
 }

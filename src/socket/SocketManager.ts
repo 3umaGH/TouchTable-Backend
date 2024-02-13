@@ -24,6 +24,8 @@ import { authMiddleware } from "./middleware/auth";
 import { hasRole, hasTablePermissions } from "./authorizationUtils";
 import { AuthenticationHandler } from "../authentication/AuthenticationHandler";
 import { LogEvent } from "../logger/Logger";
+import { saveLogo, validateLogo } from "../file/LogoManager";
+
 const jwt = require("jsonwebtoken");
 
 export class SocketManager {
@@ -45,6 +47,7 @@ export class SocketManager {
       InterServerEvents,
       SocketData
     >({
+      maxHttpBufferSize: 6e6,
       connectionStateRecovery: {},
       pingTimeout: 7000,
       pingInterval: 3000,
@@ -676,6 +679,48 @@ export class SocketManager {
               socket.data,
               `Update restaurant details (name: ${details.name}, description: ${restaurant.description}).`
             );
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("uploadLogo", async (restaurantID, file, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            const format = validateLogo(file);
+
+            if (format !== "")
+              saveLogo(restaurantID, file, format).then((url) => {
+                callback(url);
+
+                LogEvent(
+                  restaurantID,
+                  socket.data,
+                  `Uploaded logo (path: ${url}).`
+                );
+              });
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("setLogo", async (restaurantID, link, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            const restaurant = this.getRestaurantById(restaurantID);
+            restaurant.setLogo(link);
+
+            LogEvent(
+              restaurantID,
+              socket.data,
+              `Updated logo (path: ${link}).`
+            );
+
+            callback(true);
           } catch (err) {
             catchError(err, callback);
           }
