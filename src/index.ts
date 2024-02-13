@@ -22,7 +22,8 @@ const theme = {
 const restaurant = new Restaurant(
   0,
   "Bobs Ribs and Steak",
-  "https://i.imgur.com/hy5Ea6L.png",
+  "A short restaurant description here",
+  "https://i.imgur.com/xZv5KEa.png",
   theme,
   mockDishes,
   mockCategories,
@@ -44,8 +45,6 @@ aggregator.initalizeListeners();
 const statisticsManager = new StatisticsManager(aggregator);
 statisticsManager.initalizeListeners();
 
-
-
 export const authenticator = new AuthenticationHandler();
 
 const getToken = async () => {
@@ -57,7 +56,6 @@ const getToken = async () => {
   console.log(encode(JSON.stringify(ok)));
 };
 getToken();
-
 
 export const socketManager = new SocketManager(
   aggregator,

@@ -94,6 +94,12 @@ type AdminClientEvents = {
     id: number,
     callback: (e: boolean | { error: boolean; message: string }) => void
   ) => void;
+
+  updateDetails: (
+    restaurantID: number,
+    { name, description }: { name: string; description: string },
+    callback: (e: boolean | { error: boolean; message: string }) => void
+  ) => void;
 };
 
 type StaffClientEvents = {

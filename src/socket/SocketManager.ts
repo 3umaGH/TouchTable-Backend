@@ -388,6 +388,7 @@ export class SocketManager {
             const restaurant = this.getRestaurantById(restaurantID);
             const response = {
               name: restaurant.getName(),
+              description: restaurant.getDescription(),
               logo: restaurant.getLogo(),
               dishes: restaurant.getDishes(),
               categories: restaurant.getCategories(),
@@ -574,6 +575,20 @@ export class SocketManager {
 
             const restaurant = this.getRestaurantById(restaurantID);
             restaurant.deleteTable(tableID);
+
+            callback(true);
+          } catch (err) {
+            catchError(err, callback);
+          }
+        });
+
+        socket.on("updateDetails", async (restaurantID, details, callback) => {
+          try {
+            if (!hasRole(socket, restaurantID, "admin"))
+              throw new Error("Permission Denied");
+
+            const restaurant = this.getRestaurantById(restaurantID);
+            restaurant.setDetails(details);
 
             callback(true);
           } catch (err) {

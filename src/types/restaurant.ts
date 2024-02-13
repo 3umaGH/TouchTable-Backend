@@ -3,6 +3,7 @@ import { ThemeProps } from "./theme";
 
 export type RestaurantData = {
   name: string;
+  description: string;
   logo: string;
   theme: ThemeProps;
   dishes: Dish[];

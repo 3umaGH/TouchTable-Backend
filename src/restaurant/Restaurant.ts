@@ -22,6 +22,7 @@ import { JWTPayload } from "../types/auth";
 export class Restaurant extends EventEmitter {
   id: number;
   name: string;
+  description: string;
   logo: string;
   theme: ThemeProps;
   dishes: Dish[];
@@ -35,6 +36,7 @@ export class Restaurant extends EventEmitter {
   constructor(
     id: number,
     name: string,
+    description: string,
     logo: string,
     theme: ThemeProps,
     dishes: Dish[],
@@ -45,6 +47,7 @@ export class Restaurant extends EventEmitter {
     super();
     this.id = id;
     this.name = name;
+    this.description = description;
     this.logo = logo;
     this.theme = theme;
     this.dishes = dishes;
@@ -85,6 +88,10 @@ export class Restaurant extends EventEmitter {
 
   getTables = () => {
     return this.tables;
+  };
+
+  getDescription = () => {
+    return this.description;
   };
 
   getDishByID = (id: number) => {
@@ -410,5 +417,28 @@ export class Restaurant extends EventEmitter {
     this.emit("restaurantDataUpdated");
 
     console.log(`[${this.id}] Deleted table #${id}.`);
+  };
+
+  setDetails = ({
+    name,
+    description,
+  }: {
+    name: string;
+    description: string;
+  }) => {
+    if (name.length === 0 || description.length === 0)
+      throw new Error("Name or Description cannot be empty.");
+
+    if (name.length >= 30)
+      throw new Error("Name cannot be longer than 30 characters.");
+    if (description.length > 300)
+      throw new Error("Description cannot be longer than 300 characters.");
+
+    this.name = name;
+    this.description = description;
+
+    console.log(`[${this.id}] Updated restaurant details.`);
+
+    this.emit("restaurantDataUpdated");
   };
 }
