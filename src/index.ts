@@ -14,6 +14,7 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
+const http = require('http').createServer(app);
 
 const cors = require("cors");
 
@@ -65,7 +66,8 @@ getToken();
 export const socketManager = new SocketManager(
   aggregator,
   authenticator,
-  statisticsManager
+  statisticsManager,
+  http
 );
 socketManager.startListening(3001);
 socketManager.initalizeListeners();
@@ -73,6 +75,6 @@ socketManager.initalizeListeners();
 const publicPath = resolve(__dirname, process.env.LOGO_FOLDER!);
 app.use("/cdn", express.static(publicPath));
 
-app.listen(80, () => {
-  console.log(`Server is running on port ${80}`);
+http.listen(3001, () => {
+  console.log(`Server is running.`);
 });

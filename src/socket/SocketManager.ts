@@ -39,14 +39,15 @@ export class SocketManager {
   constructor(
     aggregator: RestaurantAggregator,
     authenticator: AuthenticationHandler,
-    statistics: StatisticsManager
+    statistics: StatisticsManager,
+    http:any,
   ) {
     this.io = new Server<
       ClientToServerEvents,
       ServerToClientEvents,
       InterServerEvents,
       SocketData
-    >({
+    >(http,{
       maxHttpBufferSize: 6e6,
       connectionStateRecovery: {},
       pingTimeout: 7000,
@@ -65,10 +66,7 @@ export class SocketManager {
 
   startListening = (port: number) => {
     this.io.listen(port);
-
     this.io.use(authMiddleware(this.authenticator, this));
-
-    console.log(`Listening on ${port} port.`);
   };
 
   pushTokenRefreshQueue = (id: string, access: string) => {
