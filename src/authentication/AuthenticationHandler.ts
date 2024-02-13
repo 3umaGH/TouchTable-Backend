@@ -5,6 +5,7 @@ import { decode, sign, verify } from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { SocketData } from "../types/socket";
 import { EventEmitter } from "stream";
+import { LogSystemEvent } from "../logger/Logger";
 
 require("dotenv");
 
@@ -55,6 +56,11 @@ export class AuthenticationHandler extends EventEmitter {
 
     if (!foundData) throw new Error("Invalid refresh token");
     if (!foundData.active) throw new Error("Invalid refresh token");
+
+    LogSystemEvent(
+      foundData.data.restaurantID,
+      `New Login (id: ${id}, ip: ${ip}, last IP: ${foundData.lastIP || "-"})`
+    );
 
     foundData.lastLogin = Date.now();
     foundData.lastIP = ip;
@@ -125,7 +131,7 @@ export class AuthenticationHandler extends EventEmitter {
         if (token?.lastIP === null) {
           token.active = false;
 
-          console.log(`[${restaurantID}] Token ${payload.id} has timed out.`);
+          LogSystemEvent(restaurantID, `Token ${payload.id} has timed out.`);
 
           this.emit("refreshTokensUpdated", restaurantID);
         }

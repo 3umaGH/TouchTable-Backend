@@ -1,4 +1,5 @@
 import { AuthenticationHandler } from "./authentication/AuthenticationHandler";
+import { LogEvent, LogSystemEvent } from "./logger/Logger";
 import { mockCategories, mockDishes } from "./mockData";
 import { Restaurant } from "./restaurant/Restaurant";
 import { RestaurantAggregator } from "./restaurant/RestaurantAggregator";

@@ -79,7 +79,6 @@ export class Statistics {
       });
     });
 
-    console.log(this.timeframes);
   };
 
   onAssistanceRequest = () => {

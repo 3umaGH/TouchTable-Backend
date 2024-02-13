@@ -119,9 +119,6 @@ export class Restaurant extends EventEmitter {
       notification.active = false;
 
       this.emit("notificationStatusUpdate", notification);
-      console.log(
-        `[${this.id}] Set Notification #${notification.id} inactive.`
-      );
     }
   };
 
@@ -177,7 +174,6 @@ export class Restaurant extends EventEmitter {
 
     this.emit("newOrder", assignedOrder);
 
-    console.log(`[${this.id}] Create Order #${assignedOrder.id}.`);
     return assignedOrder;
   };
 
@@ -194,9 +190,6 @@ export class Restaurant extends EventEmitter {
     order.status = newStatus as OrderStatus;
 
     this.emit("orderStatusUpdate", order, newStatus, prevStatus);
-    console.log(
-      `[${this.id}] Order #${order.id} status updated to ${newStatus}.`
-    );
   };
 
   updateOrderItemStatus = (id: string, order: Order, newStatus: string) => {
@@ -212,9 +205,6 @@ export class Restaurant extends EventEmitter {
     orderItem.status = newStatus as OrderItemStatus;
 
     this.emit("orderItemStatusUpdate", order, orderItem, newStatus, prevStatus);
-    console.log(
-      `[${this.id}] Order #${order.id} item status #${id} updated to ${newStatus}.`
-    );
   };
 
   getTableOrders = (tableID: number) => {
@@ -236,7 +226,6 @@ export class Restaurant extends EventEmitter {
         .filter((order) => order !== undefined) as Order[],
     };
 
-    console.log(`[${this.id}] Retreive table orders.`);
     return updatedTable.orders;
   };
 
@@ -253,8 +242,6 @@ export class Restaurant extends EventEmitter {
     if (existingRequest) throw new Error("Request is already pending");
 
     this.emit("assistanceRequest", tableID);
-
-    console.log(`[${this.id}] New assistance request to Table #${tableID}.`);
   };
 
   sendCheckRequest = (tableID: number, paymentBy: "cash" | "card") => {
@@ -270,10 +257,6 @@ export class Restaurant extends EventEmitter {
     if (existingRequest) throw new Error("Request is already pending");
 
     this.emit("checkRequest", tableID, paymentBy);
-
-    console.log(
-      `[${this.id}] New check request at Table #${tableID}, Payment by ${paymentBy}.`
-    );
   };
 
   createNotification = (notification: Notification) => {
@@ -312,10 +295,6 @@ export class Restaurant extends EventEmitter {
     if (category.title.length > 30)
       throw new Error("Title cannot be longer than 30 characters");
 
-    console.log(
-      `[${this.id}] Category ${this.categories[prevID]} renamed to: ${category.title}.`
-    );
-
     this.categories[prevID] = category;
     this.emit("restaurantDataUpdated");
   };
@@ -330,8 +309,6 @@ export class Restaurant extends EventEmitter {
 
     this.categories.push({ id: newID, title: category.title });
     this.emit("restaurantDataUpdated");
-
-    console.log(`[${this.id}] Create Category #${newID} ${category.title}.`);
   };
 
   deleteCategory = (category: Category) => {
@@ -351,10 +328,6 @@ export class Restaurant extends EventEmitter {
     );
 
     this.emit("restaurantDataUpdated");
-
-    console.log(
-      `[${this.id}] Delete Category #${category.id} ${category.title}.`
-    );
   };
 
   updateDish = (newDish: Dish) => {
@@ -367,8 +340,6 @@ export class Restaurant extends EventEmitter {
 
     this.dishes[prevDishID] = newDish;
     this.emit("restaurantDataUpdated");
-
-    console.log(`[${this.id}] Updated Dish ${newDish.params.title}.`);
   };
 
   createDish = (newDish: DraftDish) => {
@@ -382,15 +353,11 @@ export class Restaurant extends EventEmitter {
     this.dishes.push(newDish as Dish);
 
     this.emit("restaurantDataUpdated");
-
-    console.log(`[${this.id}] Create Dish ${newDish.params.title}.`);
   };
 
   setTheme = (newTheme: ThemeProps) => {
     this.theme = newTheme;
     this.emit("restaurantDataUpdated");
-
-    console.log(`[${this.id}] Theme Updated.`);
   };
 
   addTable = () => {
@@ -402,7 +369,6 @@ export class Restaurant extends EventEmitter {
     this.tables.push(newTable);
     this.emit("restaurantDataUpdated");
 
-    console.log(`[${this.id}] Added table #${tableID}.`);
     return newTable;
   };
 
@@ -415,8 +381,6 @@ export class Restaurant extends EventEmitter {
 
     this.tables.splice(tableIndex, 1);
     this.emit("restaurantDataUpdated");
-
-    console.log(`[${this.id}] Deleted table #${id}.`);
   };
 
   setDetails = ({
@@ -436,8 +400,6 @@ export class Restaurant extends EventEmitter {
 
     this.name = name;
     this.description = description;
-
-    console.log(`[${this.id}] Updated restaurant details.`);
 
     this.emit("restaurantDataUpdated");
   };

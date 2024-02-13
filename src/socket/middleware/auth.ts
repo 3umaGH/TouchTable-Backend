@@ -32,12 +32,14 @@ export const authMiddleware = (
     if (!token) return next(new Error("Authorization Failed 1"));
     if (!refreshToken) return next(new Error("Authorization Failed 2"));
 
+    const ip =
+      socket.handshake.headers["x-forwarded-for"]?.toString() ??
+      socket.handshake.address;
+
+    socket.data.ip = ip;
+
     const verifyAndSetData = async (token: string) =>
       await new Promise<void>(async (resolve, reject) => {
-        let ip =
-          socket.handshake.headers["x-forwarded-for"]?.toString() ??
-          socket.handshake.address;
-
         try {
           const decoded = (await verify(
             token,
