@@ -65,7 +65,7 @@ export class SocketManager {
   }
 
   startListening = (port: number) => {
-    this.io.listen(port);
+    //this.io.listen(port);
     this.io.use(authMiddleware(this.authenticator, this));
   };
 
